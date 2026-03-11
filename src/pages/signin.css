@@ -22,19 +22,26 @@ body {
 
 /* CARD */
 .signin-card {
+    position: relative;
     width: 100%;
-    height: 800px;
+    height: 750px;
     display: grid;
     grid-template-columns: 1fr 1fr;
     background: white;
     border-radius: 12px;
     overflow: hidden;
     font-family: "Berlin Sans FB Demi";
-}
+    background: radial-gradient(
+            circle at 30% 30%,
+            #ffffff 0%,
+            #e5e7eb 30%,
+            #730d19 90%,
+            #730d19 100%
+    );}
 
 /* ================= LEFT ================= */
 .left-panel {
-    background: radial-gradient(circle at 30% 30%, #FFD6A5 0%, #FFB6C1 40%, #FDE2E4 100%);
+    background: transparent;
     color: #000000;
     padding: 60px 50px;
     display: flex;
@@ -42,12 +49,18 @@ body {
     font-family: "Berlin Sans FB Demi";
 }
 
+.left-content {
+    display: flex;
+    flex-direction: column;
+}
+
 .left-content h1 {
     font-size: 65px;
     font-weight: 700;
     line-height: 1.2;
-    margin-bottom: 80px;
+    margin-bottom: 50px;
     font-family: "Berlin Sans FB Demi";
+    color: #730d19;
 }
 
 .subtitle {
@@ -74,9 +87,9 @@ body {
     gap: 8px;
     min-width: 250px;
     min-height: 150px;
-    color: #3F51B5;
+    color: #1e293b;
     font-family: "Berlin Sans FB Demi";
-    transition: all 0.3s ease;   /* مهم */
+    transition: all 0.3s ease;
     cursor: pointer;
 }
 
@@ -87,7 +100,7 @@ body {
 
 .step.active {
     background: #ffffff;
-    color: #000;
+    color: #730d19;
 }
 
 .circle {
@@ -105,19 +118,29 @@ body {
 }
 
 .step.active .circle {
-    background: #000;
+    background: #730d19;
     color: #fff;
 }
 
 /* ================= RIGHT ================= */
 .right-panel {
+    position: absolute;
+    right: -215px;
+    top: 50%;
+    transform: translateY(-50%);
+
+    width: 1020px;
+    height: 950px;
+
+    border-radius: 60%;
+
     background: white;
-    color: #000000;
+
     display: flex;
     justify-content: center;
-    margin-top: 80px;
-
+    align-items: center;
 }
+
 
 .form-box {
     width: 100%;
@@ -128,7 +151,7 @@ body {
     font-size: 35px;
     margin-bottom: 14px;
     font-weight: 650;
-    color: #3b5998;
+    color: #1e293b;
     font-family: "Berlin Sans FB Demi";
     text-align: center;
 }
@@ -136,7 +159,7 @@ body {
     font-size: 35px;
     margin-bottom: 14px;
     font-weight: 650;
-    color: #e23654;
+    color: #730d19;
     font-family: "Berlin Sans FB Demi";
 }
 .form-sub {
@@ -207,8 +230,7 @@ input {
 }
 
 input:focus {
-    border: 2px solid #FFD6A5;
-
+    border: 2px solid navy;
 }
 
 input::placeholder {
@@ -227,7 +249,7 @@ input::placeholder {
 
 .signup-btn {
     width: 100%;
-    background: linear-gradient(135deg, #FFB347, #FF6961);
+    background: linear-gradient(135deg, #4facfe, #730d19);
     color: #000;
     border: none;
     padding: 12px;
@@ -237,13 +259,13 @@ input::placeholder {
     cursor: pointer;
     margin-bottom: 15px;
     transition: 0.2s ease;
-    box-shadow: 0 4px 15px rgba(255, 165, 0, 0.3);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.57);
     font-family: "Berlin Sans FB Demi";
 }
 
 .signup-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 25px rgba(255, 165, 0, 0.5);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.57);
     font-family: "Berlin Sans FB Demi";
 }
 
@@ -283,7 +305,7 @@ text-align: center;
 }
 
 .input-group input:focus {
-    border: 2px solid #FFD6A5;
+    border: 2px solid navy;
 }
 
 .input-icon {
@@ -300,5 +322,24 @@ text-align: center;
 /* icon change color on focus */
 .input-group input:focus + .input-icon,
 .input-group input:focus ~ .input-icon {
-    color: #e23654;
+    color: #730d19;
+}
+.play {
+    background: linear-gradient(135deg, #4facfe, #730d19);
+    color: white;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 25px;
+    font-size: 13px;
+    cursor: pointer;
+    font-weight: 800;
+    transition: 0.2s ease;
+    font-family: "Berlin Sans FB Demi";
+    align-self: flex-start;
+}
+
+.play:hover {
+    transform: scale(1.1);
+    background: #730d19;
+    color: white;
 }

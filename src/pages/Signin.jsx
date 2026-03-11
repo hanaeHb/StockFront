@@ -22,7 +22,7 @@ export default function SignIn() {
                             Get Started<br/>with Us
                         </h1>
                         <p className="subtitle">
-                            Let’s make StockFlow fun! Just follow these steps to create your account.
+                            Let’s make Go StoCk fun! Just follow these steps to create your account.
                         </p>
 
                         <div className="steps">
@@ -35,27 +35,24 @@ export default function SignIn() {
                             <div className="step">
                                 <div className="circle">2</div>
                                 <span>Set up your</span>
-                                <span>workspace</span>
-                            </div>
-
-                            <div className="step">
-                                <div className="circle">3</div>
-                                <span>Set up your</span>
                                 <span>profile</span>
                             </div>
                         </div>
                     </div>
+                    <button className="play" onClick={() => navigate("/")}>
+                        ◀ Back Home
+                    </button>
                 </div>
 
                 {/* RIGHT PANEL */}
                 <div className="right-panel">
-                    <div className="form-box">
-                        <h2>JOIN <span>Stockflow</span></h2>
+                <div className="form-box">
+                        <h2>JOIN <span>GO StoCk</span></h2>
 
                         <p className="form-sub">
                             Manage smarter. Grow faster.</p>
                         <p className="form-sum">
-                            Sign in to StockFlow and transform the way you handle your inventory.
+                            Sign in to GO StoCk and transform the way you handle your inventory.
                         </p>
                         <div className="row">
                             <div className="input-group">

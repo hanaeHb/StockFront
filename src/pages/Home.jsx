@@ -2,6 +2,7 @@ import React from "react";
 import "./home.css";
 import Navbar from "../components/Navbar";
 import { AiOutlineCloudSync } from "react-icons/ai";
+import LogoScene from "./LogoScene"
 import {
     FaFacebookF,
     FaInstagram,
@@ -9,6 +10,7 @@ import {
     FaLinkedinIn,
     FaMapMarkerAlt
 } from "react-icons/fa";
+import { FaPaperPlane } from "react-icons/fa";
 import {
     FaBoxes,
     FaShoppingCart,
@@ -26,7 +28,7 @@ const Home = () => {
         <>
             <Navbar />   {}
 
-            <div className="home">
+            <div id="home" className="home">
 
                 {/* HERO SECTION */}
                 <section className="hero">
@@ -35,22 +37,24 @@ const Home = () => {
                         <p className="hero-subtitle">
                             The best Smart Inventory Management platform for modern businesses
                         </p>
-                        <h1 className="hero-title">IN <span>Stockflow</span></h1>
+                        <h1 className="hero-title">IN <span>GO <img src="/images/logoostock.jpeg" alt="Stockflow Logo"
+                                                                    className="logo-image"/></span></h1>
                         <p className="hero-description">
                             Automate restocking, track your inventory in real-time,
                             and streamline your supply chain with our intelligent platform.
                         </p>
                         <div className="hero-buttons">
                             <button className="btn-primary">Book a Demo</button>
-                            <button className="btn-primary">Contact US</button>
+                            <button className="btn-primary" onClick={() => scrollToSection("contact")}>
+                                Contact US
+                            </button>
                         </div>
                     </div>
 
                     <div className="hero-image">
-                        <img
-                            src="/images/20946001.jpg"
-                            alt="cloud warehouse"
-                        />
+                    <div className="hero-image">
+                            <LogoScene/>
+                        </div>
                     </div>
                     {/* Gradient line at bottom of hero */}
                     <hr className="hero-hr"/>
@@ -78,7 +82,37 @@ const Home = () => {
                 </section>
                 <hr className="amenities-hr"/>
                 {/* TRUSTED BY */}
-                <section className="trusted">
+                <section id="about" className="smart-section">
+                    <h2><span>About </span>GO StoCk</h2>
+
+                    <div className="content-row">
+                        <div className="left-image">
+                            <img src="/images/logoostock.jpeg" alt="Smart Stock App"/>
+                        </div>
+
+                        <div className="right-text">
+                            <p>
+                                Our Smart Cloud-Native Inventory Management platform is designed to transform the way
+                                organizations monitor, control, and optimize their stock operations. Built on a scalable
+                                microservices architecture, the system centralizes product management, supplier
+                                coordination, real-time stock tracking, and automated replenishment within a secure and
+                                high-performance environment. The application integrates intelligent alert mechanisms
+                                and AI-powered demand forecasting to anticipate shortages, reduce overstock, and support
+                                data-driven strategic decisions. By combining automation, predictive analytics, and
+                                role-based access control, the platform ensures operational efficiency, cost reduction,
+                                and a smarter supply chain ecosystem tailored for modern enterprises.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="center-button">
+                        <button className="learn-btn">
+                            Learn More <span className="arrow">→</span>
+                        </button>
+                    </div>
+
+                </section>
+                <section id="leading" className="trusted">
                     <p>Trusted by Leading Suppliers</p>
                     <div className="logos">
                         <span>DHL</span>
@@ -89,7 +123,7 @@ const Home = () => {
                 </section>
 
                 {/* FEATURES */}
-                <section className="features">
+                <section id="features" className="features">
                     <h2>Smart Inventory & Automated Restocking</h2>
                     <p className="section-subtitle">
                         Transform your inventory management with intelligent automation, predictive insights, and
@@ -189,9 +223,38 @@ const Home = () => {
 
                 </section>
 
+                {/* CONTACT SECTION */}
+                <section id="contact" className="contact-section">
+                    <h2>Contact Us</h2>
+                    <p className="contact-subtitle">
+                        Have questions or need assistance? Send us a message and our team will get back to you.
+                    </p>
+
+                    <form className="contact-form">
+                        <div className="form-group">
+                            <input
+                                type="email"
+                                placeholder="Your Email Address"
+                                required
+                            />
+                        </div>
+
+                        <div className="form-group">
+            <textarea
+                placeholder="Write your message here..."
+                rows="5"
+                required
+            ></textarea>
+                        </div>
+
+                        <button type="submit" className="contact-btn">
+                            Send Message <FaPaperPlane className="send-icon"/>
+                        </button>
+                    </form>
+                </section>
                 {/* FOOTER */}
                 <footer className="footer">
-                    <div className="footer-grid">
+                <div className="footer-grid">
 
                         {/* Company Info */}
                         <div>
@@ -213,7 +276,7 @@ const Home = () => {
                                 </a>
 
                                 <a href="#" className="social-icon twitter">
-                                <FaTwitter/>
+                                    <FaTwitter/>
                                 </a>
 
                                 <a href="#" className="social-icon linkedin">
@@ -272,4 +335,10 @@ const Home = () => {
     );
 };
 
+const scrollToSection = (id) => {
+    const section = document.getElementById(id);
+    if (section) {
+        section.scrollIntoView({ behavior: "smooth" });
+    }
+};
 export default Home;

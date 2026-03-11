@@ -23,7 +23,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between; /* push text left, image right */
-    padding: 0 5%;
+    padding: 0 1%;
     overflow: hidden;
 }
 
@@ -31,7 +31,7 @@ body {
     position: relative;
     z-index: 2;
     max-width: 45%; /* text width */
-    color: #283593;
+    color: #1e293b;
 }
 
 .hero-text h1 {
@@ -45,15 +45,13 @@ body {
 }
 
 .hero-image {
-    position: relative;
-    max-width: 50%; /* image width */
-    z-index: 1;
+    width: 100%;
+    height: 500px; /* important bach canvas yban */
 }
 
-.hero-image img {
-    width: 100%;
-    height: auto;
-    border-radius: 12px;
+.hero-image canvas {
+    width: 100% !important;
+    height: 100% !important;
 }
 
 
@@ -65,14 +63,6 @@ body {
         text-align: center;
     }
 
-    .hero-text, .hero-image {
-        max-width: 100%;
-    }
-
-    .hero-image img {
-        width: 80%;
-        margin-top: 20px;
-    }
 }
 /* Gradient line at bottom of hero */
 .hero-hr {
@@ -82,14 +72,14 @@ body {
     width: 100%;
     height: 18px;
     border: none;
-    background: linear-gradient(135deg, #FFD6A5, #FFB6C1, #FDE2E4);
+    background: linear-gradient(135deg, #1e293b, #730d19);
 }
 /* Hero text additions */
 .hero-subtitle {
     font-size: 22px;
     letter-spacing: 8px;
     margin-bottom: 20px;
-    color: #3F51B5;
+    color: #1e293b;
     font-family: "Berlin Sans FB Demi";
     font-weight: 300;
     text-transform: uppercase;
@@ -102,7 +92,7 @@ body {
     margin-bottom: 20px;
     line-height: 1.1;
     text-align: center;
-    color: #F97316;
+    color:  #730d19;
     font-family: "Berlin Sans FB Demi";
 }
 
@@ -110,7 +100,7 @@ body {
     display: block;
     font-weight: 700;
     font-family: "Berlin Sans FB Demi";
-    color: #e23654;
+    color: #1e293b;
 }
 
 .hero-description {
@@ -137,7 +127,7 @@ body {
 
 /* Primary button */
 .btn-primary {
-    background: linear-gradient(135deg, #FFB347, #FF6961);
+    background: linear-gradient(135deg, #4facfe,  #730d19);
     color: white;
     font-weight: 600;
     font-size: 16px;
@@ -152,7 +142,7 @@ body {
 
 .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 25px rgba(255, 165, 0, 0.5);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.57);
 }
 
 /* Buttons container */
@@ -166,14 +156,16 @@ body {
 .amenities {
     padding: 60px 5%;
     text-align: center;
-    background: linear-gradient(135deg, rgba(195, 192, 187, 0.86), #fdf8fa);
+    background: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.78)),
+    url('https://images.unsplash.com/photo-1553413077-190dd305871c?auto=format&fit=crop&w=2070&q=80')
+    center/cover no-repeat;
     font-family: "Berlin Sans FB Demi";
     height: 370px;
 }
 
 .amenities-header .section-subtitle {
     font-size: 20px;
-    color: #3F51B5;
+    color: #4facfe;
     font-weight: 400;
     letter-spacing: 6px;
     text-transform: uppercase;
@@ -182,11 +174,12 @@ body {
 }
 
 .amenities-header .section-main-title {
-    font-size: 50px;
+    font-size: 60px;
     font-weight: 700;
-    color: #000000;
+    color: white;
     margin-bottom: 20px;
     margin-top: 40px;
+    font-family: "Berlin Sans FB Demi";
 }
 
 .section-divider {
@@ -199,19 +192,33 @@ body {
 
 .divider-line {
     flex: 1;
-    height: 2px;
-    background: linear-gradient(135deg, #FFB347, #FF6961);
+    height: 3px;
+    background: linear-gradient(270deg, #4facfe,  #730d19, #4facfe);
+    background-size: 400% 400%;
+    animation: gradientMove 4s ease infinite;
 }
 
+@keyframes gradientMove {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
 .divider-icon {
     margin: 0 15px;
     font-size: 37px;
-    color: #F97316;
+    color: #4facfe;
+    animation: floatIcon 2.5s ease-in-out infinite;
+}
+
+@keyframes floatIcon {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-6px); }
+    100% { transform: translateY(0px); }
 }
 
 .section-intro {
     font-size: 16px;
-    color: rgba(0, 0, 0, 0.82);
+    color: rgb(241, 233, 210);
     max-width: 700px;
     margin: 0 auto;
     line-height: 1.6;
@@ -222,22 +229,111 @@ body {
     width: 100%;
     height: 18px;
     border: none;
-    background: linear-gradient(135deg, #FFD6A5, #FFB6C1, #FDE2E4);
+    background: linear-gradient(135deg, #1e293b, #730d19);
+}
+.smart-section {
+    background: #ffffff;
+    padding: 80px 10%;
+    font-family: "Berlin Sans FB Demi", sans-serif;
+}
+
+/* Row layout */
+.content-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 60px;
+    margin-bottom: 50px;
+}
+
+/* Image */
+.left-image img {
+    width: 530px;
+}
+
+/* Text */
+.right-text {
+    max-width: 500px;
+}
+
+.smart-section h2 {
+    font-size: 36px;
+    color: #1e293b;
+    margin-bottom: 20px;
+    text-align: center;
+    font-family: "Berlin Sans FB Demi";
+}
+.smart-section h2 span {
+    font-size: 36px;
+    color: #1e293b;
+    margin-bottom: 20px;
+    font-family: "Berlin Sans FB Demi";
+}
+
+.smart-section h2:after {
+    content: '';
+    position: absolute;
+    bottom: -450px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 70px;
+    height: 4px;
+    background-color: #730d19;
+    border-radius: 2px;
+
+}
+.right-text p {
+    font-size: 18px;
+    color: #64748b;
+    line-height: 1.6;
+    font-family: "Berlin Sans FB Demi";
+    text-align: center;
+}
+
+/* Center Button */
+.center-button {
+    text-align: center;
+}
+
+.learn-btn {
+    background: linear-gradient(135deg, #730d19, #1e293b);
+    color: #ffffff;
+    padding: 14px 32px;
+    border: none;
+    border-radius: 40px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.learn-btn:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 15px 30px rgba(115,13,25,0.3);
+}
+
+.arrow {
+    font-size: 20px;
+    transition: 0.3s;
+}
+
+.learn-btn:hover .arrow {
+    transform: translateX(6px);
 }
 /* Trusted By Section - Style carte */
 .trusted {
     text-align: center;
-    padding: 30px;
-    background: linear-gradient(135deg, #fdf5ec, #fbe3e6, #fdf6f6);
-    border-radius: 20px;
-    margin-left: 100px;
-    margin-right: 100px;
+    padding: 50px;
+    background: linear-gradient(135deg, #fdf5ec, rgba(30, 41, 59, 0.86), #fdf6f6);
     margin-bottom: 50px;
-    margin-top: 85px;
+    margin-top: 15px;
+    border: 2px solid #730d19;
 }
 
 .trusted p {
-    color: #64748b;
+    color: #ffffff;
     font-size: 30px;
     font-weight: 500;
     text-transform: uppercase;
@@ -255,7 +351,7 @@ body {
 .logos span {
     font-size: 22px;
     font-weight: 600;
-    color: #3F51B5;
+    color: #000000;
     opacity: 0.7;
     transition: opacity 0.3s;
     font-family: "Berlin Sans FB Demi";
@@ -263,7 +359,7 @@ body {
 
 .logos span:hover {
     opacity: 1;
-    color: #f97316;
+    color:  #730d19;
 }
 
 /* Features Section - Style carte */
@@ -282,7 +378,7 @@ body {
 }
 
 .feature-card {
-    background: white;
+    background: linear-gradient(#e5e7eb, #1e293b);
     padding: 25px;
     border-radius: 15px;
     transition: all 0.3s ease;
@@ -291,7 +387,7 @@ body {
 
 .feature-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 10px 30px rgba(249, 115, 22, 0.15);
+    box-shadow: 0 10px 30px rgba(131, 14, 20, 0.85);
 }
 
 .card1 {
@@ -313,12 +409,12 @@ body {
 .feature-card h3 {
     font-size: 18px;
     font-weight: 600;
-    color: #1e293b;
+    color: white;
     margin-bottom: 12px;
 }
 
 .feature-card p {
-    color: #64748b;
+    color: #f1e9d2;
     line-height: 1.5;
     font-size: 14px;
 }
@@ -403,7 +499,7 @@ body {
     transform: translateX(-50%);
     width: 70px;
     height: 4px;
-    background-color: #e23654;
+    background-color: #730d19;
     border-radius: 2px;
 
 }
@@ -424,11 +520,91 @@ body {
     transform: rotate(-8deg) scale(1.1);
     box-shadow: 0 10px 25px rgba(0,0,0,0.2);
 }
+
+/* CONTACT SECTION */
+.contact-section {
+    padding: 20px 20px;
+    background: #ffffff;
+    text-align: center;
+}
+
+.contact-section h2 {
+    font-size: 36px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 15px;
+    position: relative;
+    text-align: center;
+    font-family: "Berlin Sans FB Demi";
+}
+.contact-section h2:after {
+    content: '';
+    position: absolute;
+    bottom: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 70px;
+    height: 4px;
+    background-color: #730d19;
+    border-radius: 2px;
+
+}
+.contact-subtitle {
+    max-width: 680px;
+    margin: 0 auto 40px auto;
+    font-size: 18px;
+    color: #64748b;
+    line-height: 1.5;
+    text-align: center;
+}
+
+.contact-form {
+    max-width: 600px;
+    margin: auto;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.contact-form input,
+.contact-form textarea {
+    width: 100%;
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px solid #ddd;
+    font-size: 16px;
+    font-family: "Berlin Sans FB Demi";
+    transition: 0.3s ease;
+}
+
+.contact-form input:focus,
+.contact-form textarea:focus {
+    border-color: navy;
+    outline: none;
+    box-shadow: 0 0 8px rgba(115, 13, 25, 0.2);
+}
+
+.contact-btn {
+    background: linear-gradient(135deg, #730d19, #1e293b);
+    color: white;
+    padding: 14px 30px;
+    border: none;
+    border-radius: 30px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: 0.3s ease;
+}
+
+.contact-btn:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 15px 30px rgba(115,13,25,0.3);
+}
 .footer {
-    background: #0f172a;
+    background: linear-gradient(rgba(0, 0, 0, 0.8), #1e293b);
     color: #e2e8f0;
     padding: 60px 5% 30px;
-    margin-top: 200px;
+    margin-top: 80px;
 }
 
 .footer-grid {
@@ -520,7 +696,7 @@ body {
 }
 
 .footer-link:hover {
-    color: #f97316;
+    color:  #730d19;
     padding-left: 5px;
 }
 
@@ -538,7 +714,7 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    background: linear-gradient(135deg, #FFB347, #FF6961);
+    background: linear-gradient(135deg, #4facfe,  #730d19);
     color: white;
     padding: 10px 18px;
     border-radius: 8px;
@@ -549,8 +725,8 @@ body {
 
 .directions-btn:hover {
     background: white;
-    color: #f97316;
-    border: 1px solid #f97316;
+    color:  #730d19;
+    border: 1px solid  #730d19;
 }
 
 /* Footer bottom */
@@ -558,7 +734,7 @@ body {
     text-align: center;
     margin-top: 40px;
     padding-top: 20px;
-    border-top: 1px solid #334155;
+    border-top: 1px solid rgb(241, 233, 210);
     font-size: 13px;
     color: #94a3b8;
 }

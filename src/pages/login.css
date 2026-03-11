@@ -30,7 +30,7 @@ body {
     font-size: 35px;
     margin-bottom: 14px;
     font-weight: 650;
-    color: #3b5998;
+    color: #1e293b;
     font-family: "Berlin Sans FB Demi";
     text-align: center;
 }
@@ -38,7 +38,7 @@ body {
     font-size: 35px;
     margin-bottom: 14px;
     font-weight: 650;
-    color: #e23654;
+    color: #730d19;
     font-family: "Berlin Sans FB Demi";
 }
 .form-sub {
@@ -70,7 +70,7 @@ input {
 }
 
 input:focus {
-    border: 2px solid #FFD6A5;
+    border: 2px solid navy;
 
 }
 
@@ -103,7 +103,7 @@ input::placeholder {
 }
 
 .input-group input:focus {
-    border: 2px solid #FFD6A5;
+    border: 2px solid navy;
 }
 
 .input-icon {
@@ -120,13 +120,13 @@ input::placeholder {
 /* icon change color on focus */
 .input-group input:focus + .input-icon,
 .input-group input:focus ~ .input-icon {
-    color: #e23654;
+    color: #730d19;
 }
 
 /* BUTTON */
 .login-btn {
     width: 100%;
-    background: linear-gradient(135deg, #FFB347, #FF6961);
+    background: linear-gradient(135deg, #4facfe, #730d19);
     color: #000;
     border: none;
     padding: 12px;
@@ -136,13 +136,13 @@ input::placeholder {
     cursor: pointer;
     margin-bottom: 15px;
     transition: 0.2s ease;
-    box-shadow: 0 4px 15px rgba(255, 165, 0, 0.3);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.57);
     font-family: "Berlin Sans FB Demi";
 }
 
 .login-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 25px rgba(255, 165, 0, 0.5);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.57);
     font-family: "Berlin Sans FB Demi";
 }
 .socials {
@@ -214,8 +214,7 @@ input::placeholder {
 
     border-radius: 60%;
 
-    background: radial-gradient(circle at 30% 30%, #FFD6A5 0%, #FFB6C1 40%, #FDE2E4 100%);
-
+    background: radial-gradient(circle at 30% 30%, #ffffff 0%, #e5e7eb 40%, #730d19 100%);
     position: absolute;
 
     right: -200px;
@@ -238,15 +237,15 @@ input::placeholder {
 
 .circle-content h1 {
     font-size: 48px;
-    color: #000000;
-    margin-bottom: 80px;
+    color: #730d19;
+    margin-bottom: 50px;
     font-family: "Berlin Sans FB Demi";
 }
 
 .circle-text {
     font-size: 16px;
     line-height: 1.5;
-    margin-bottom: 30px;
+    margin-bottom: 35px;
     color: #000000;
     font-family: "Berlin Sans FB Demi";
 }
@@ -256,7 +255,7 @@ input::placeholder {
     gap: 12px;
     justify-content: space-between;
     margin-top: 30px;
-    color: #3b5998;
+    color: #1e293b;
     margin-bottom: 50px;
 }
 
@@ -268,11 +267,11 @@ input::placeholder {
 
 .icon-feature:hover {
     transform: translateY(-5px);
-    color: #af3644;
+    color:#730d19;
 }
 
 .play {
-    background: #af3644;
+    background: linear-gradient(135deg, #4facfe, #730d19);
     color: white;
     border: none;
     padding: 10px 25px;
@@ -285,6 +284,6 @@ input::placeholder {
 
 .play:hover {
     transform: scale(1.1);
-    background: #3b5998;
+    background: #730d19;
     color: white;
 }
