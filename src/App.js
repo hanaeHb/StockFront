@@ -8,6 +8,7 @@ import Manager from "./pages/Manager";
 import InventoryManager from "./pages/InventoryManager"
 import ProcurementManager from "./pages/ProcurementManager"
 import PrivateRoute from "./pages/PrivateRoute";
+import Fournisseur from "./pages/fournisseur";
 
 
 function App() {
@@ -31,6 +32,9 @@ function App() {
                 </Route>
                 <Route element={<PrivateRoute role="Inventory Manager" />}>
                     <Route path="/InventoryManager" element={<InventoryManager />} />
+                </Route>
+                <Route element={<PrivateRoute role="FOURNISSEUR" />}>
+                    <Route path="/Fournisseur" element={<Fournisseur />} />
                 </Route>
                 {/* fallback */}
                 <Route path="*" element={<Navigate to="/" />} />

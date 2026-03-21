@@ -316,7 +316,7 @@ export default function Admin() {
                                 <FaUser/>
                             </div>
                         </div>
-                        <p>{adminData.firstName}</p>
+                        <p>{adminData?.firstName}</p>
                     </div>
                 </div>
 
@@ -698,10 +698,10 @@ export default function Admin() {
                         {adminData && (
                             <form className="profile-form" onSubmit={handleUpdate}>
                                 <div className="form-group"><label>First Name</label><input type="text"
-                                                                                            value={adminData.firstName}
+                                                                                            value={adminData?.firstName}
                                                                                             readOnly/></div>
                                 <div className="form-group"><label>Last Name</label><input type="text"
-                                                                                           value={adminData.lastName}
+                                                                                           value={adminData?.lastName}
                                                                                            readOnly/></div>
                                 <div className="form-group"><label>Email</label><input type="email"
                                                                                        value={adminData.email}

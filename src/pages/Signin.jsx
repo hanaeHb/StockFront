@@ -1,5 +1,6 @@
-// signin.jsx
-import React from "react";
+
+import React, { useState } from "react";
+import axios from "axios";
 import "./signin.css";
 import {
     FaUser,
@@ -12,6 +13,55 @@ import {useNavigate} from "react-router-dom";
 
 export default function SignIn() {
     const navigate = useNavigate();
+    const [formData, setFormData] = useState({
+        firstName: "",
+        email: "",
+        telephone: "",
+        password: ""
+    });
+
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
+
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setError("");
+
+        try {
+            const res = await axios.post("http://localhost:8096/v1/users/register", {
+                firstName: formData.firstName,
+                lastName: "Fournisseur",
+                email: formData.email,
+                phone: formData.telephone,
+                password: formData.password,
+                role: ["FOURNISSEUR"]
+            }, {
+                headers: { "Content-Type": "application/json" }
+            });
+
+            console.log("Fournisseur registered:", res.data);
+
+            if (res.data.accessToken) {
+                localStorage.setItem("token", res.data.accessToken);
+                localStorage.setItem("role", "FOURNISSEUR");
+            }
+
+            alert(`Fournisseur ${formData.firstName} has been registered successfully!`);
+
+            navigate("/login");
+
+        } catch (err) {
+            console.error(err);
+            setError(err.response?.data?.message || "Error during registration");
+        } finally {
+            setLoading(false);
+        }
+    };
     return (
         <div className="signin-wrapper">
             <div className="signin-card">
@@ -46,7 +96,7 @@ export default function SignIn() {
 
                 {/* RIGHT PANEL */}
                 <div className="right-panel">
-                <div className="form-box">
+                    <div className="form-box">
                         <h2>JOIN <span>GO StoCk</span></h2>
 
                         <p className="form-sub">
@@ -57,28 +107,52 @@ export default function SignIn() {
                         <div className="row">
                             <div className="input-group">
                                 <FaUser className="input-icon"/>
-                                <input placeholder="First Name..."/>
+                                <input placeholder="Full Name..."
+                                       name="firstName"
+                                       value={formData.firstName}
+                                       onChange={handleChange}
+                                />
                             </div>
 
                             <div className="input-group">
                                 <FaUser className="input-icon"/>
-                                <input placeholder="Last Name..."/>
+                                <input
+                                    placeholder="Telephone..."
+                                    name="telephone"
+                                    value={formData.telephone}
+                                    onChange={handleChange}
+                                />
                             </div>
+
                         </div>
 
                         <div className="input-group">
                             <FaEnvelope className="input-icon"/>
-                            <input placeholder="Enter your Email..."/>
+                            <input
+                                placeholder="Email..."
+                                name="email"
+                                value={formData.email}
+                                onChange={handleChange}
+                            />
                         </div>
+
 
                         <div className="input-group">
                             <FaLock className="input-icon"/>
-                            <input type="password" placeholder="Enter your password..."/>
+                            <input
+                                type="password"
+                                placeholder="Password..."
+                                name="password"
+                                value={formData.password}
+                                onChange={handleChange}
+                            />
                         </div>
 
                         <small className="hint">Must be at least 8 characters.</small>
 
-                        <button className="signup-btn">Sign Up</button>
+                        <button className="signup-btn" onClick={handleSubmit} disabled={loading}>
+                            {loading ? "Signing Up..." : "Sign Up"}
+                        </button>
 
                         <div className="or">OR SIGN UP WITH</div>
 

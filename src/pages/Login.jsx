@@ -9,6 +9,7 @@ import {
     FaBox,
     FaFacebookF, FaChartBar, FaBolt, FaMobileAlt
 } from "react-icons/fa";
+import axios from "axios";
 
 export default function Login() {
     const navigate = useNavigate();
@@ -17,33 +18,37 @@ export default function Login() {
 
     const handleLogin = async () => {
         try {
-            const res = await fetch("http://localhost:8096/v1/users/login", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, password })
+            const res = await axios.post("http://localhost:8096/v1/users/login", {
+                email: email.trim(),
+                password: password
             });
 
-            if (!res.ok) {
-                alert("Login failed");
-                return;
-            }
-
-            const data = await res.json();
+            const data = res.data;
+            console.log("Login response:", data);
             localStorage.setItem("token", data.accessToken);
 
             const decoded = jwtDecode(data.accessToken);
+            console.log("DECODED:", decoded);
 
             if (decoded.roles.includes("ADMIN")) {
+                alert("Login successful as Fournisseur!");
                 navigate("/Admin");
             }
             else if (decoded.roles.includes("Manager")) {
+                alert("Login successful as Fournisseur!");
                 navigate("/Manager");
             }
             else if (decoded.roles.includes("Procurement Manager")) {
+                alert("Login successful as Fournisseur!");
                 navigate("/ProcurementManager");
             }
             else if (decoded.roles.includes("Inventory Manager")) {
+                alert("Login successful as Fournisseur!");
                 navigate("/InventoryManager");
+            }
+            else if (decoded.roles.includes("FOURNISSEUR")) {
+                alert("Login successful as Fournisseur!");
+                navigate("/Fournisseur");
             }
             else {
                 navigate("/userPage");
