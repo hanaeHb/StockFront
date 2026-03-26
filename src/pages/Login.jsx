@@ -18,7 +18,7 @@ export default function Login() {
 
     const handleLogin = async () => {
         try {
-            const res = await axios.post("http://localhost:8096/v1/users/login", {
+            const res = await axios.post("http://localhost:8098/v1/users/login", {
                 email: email.trim(),
                 password: password
             });
@@ -31,24 +31,24 @@ export default function Login() {
             console.log("DECODED:", decoded);
 
             if (decoded.roles.includes("ADMIN")) {
-                alert("Login successful as Fournisseur!");
+                alert("Login successful as ADMIN!");
                 navigate("/Admin");
             }
             else if (decoded.roles.includes("Manager")) {
-                alert("Login successful as Fournisseur!");
+                alert("Login successful as Manager!");
                 navigate("/Manager");
             }
             else if (decoded.roles.includes("Procurement Manager")) {
-                alert("Login successful as Fournisseur!");
+                alert("Login successful as Procurement Manager!");
                 navigate("/ProcurementManager");
             }
             else if (decoded.roles.includes("Inventory Manager")) {
-                alert("Login successful as Fournisseur!");
+                alert("Login successful as Inventory Manager!");
                 navigate("/InventoryManager");
             }
-            else if (decoded.roles.includes("FOURNISSEUR")) {
+            else if (decoded.roles.includes("Fournisseur")) {
                 alert("Login successful as Fournisseur!");
-                navigate("/Fournisseur");
+                navigate("/fournisseur");
             }
             else {
                 navigate("/userPage");

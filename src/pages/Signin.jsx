@@ -15,8 +15,10 @@ export default function SignIn() {
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
         firstName: "",
+        lastName:"",
         email: "",
-        telephone: "",
+        phone: "",
+        cin: "",
         password: ""
     });
 
@@ -33,13 +35,14 @@ export default function SignIn() {
         setError("");
 
         try {
-            const res = await axios.post("http://localhost:8096/v1/users/register", {
+            const res = await axios.post("http://localhost:8098/v1/users/register", {
                 firstName: formData.firstName,
-                lastName: "Fournisseur",
+                lastName: formData.lastName,
                 email: formData.email,
-                phone: formData.telephone,
+                phone: formData.phone,
                 password: formData.password,
-                role: ["FOURNISSEUR"]
+                cin: formData.cin,
+                role: ["Fournisseur"]
             }, {
                 headers: { "Content-Type": "application/json" }
             });
@@ -48,12 +51,12 @@ export default function SignIn() {
 
             if (res.data.accessToken) {
                 localStorage.setItem("token", res.data.accessToken);
-                localStorage.setItem("role", "FOURNISSEUR");
+                localStorage.setItem("role", "Fournisseur");
             }
 
             alert(`Fournisseur ${formData.firstName} has been registered successfully!`);
 
-            navigate("/login");
+            navigate("/pending-validation");
 
         } catch (err) {
             console.error(err);
@@ -104,28 +107,6 @@ export default function SignIn() {
                         <p className="form-sum">
                             Sign in to GO StoCk and transform the way you handle your inventory.
                         </p>
-                        <div className="row">
-                            <div className="input-group">
-                                <FaUser className="input-icon"/>
-                                <input placeholder="Full Name..."
-                                       name="firstName"
-                                       value={formData.firstName}
-                                       onChange={handleChange}
-                                />
-                            </div>
-
-                            <div className="input-group">
-                                <FaUser className="input-icon"/>
-                                <input
-                                    placeholder="Telephone..."
-                                    name="telephone"
-                                    value={formData.telephone}
-                                    onChange={handleChange}
-                                />
-                            </div>
-
-                        </div>
-
                         <div className="input-group">
                             <FaEnvelope className="input-icon"/>
                             <input
@@ -135,7 +116,6 @@ export default function SignIn() {
                                 onChange={handleChange}
                             />
                         </div>
-
 
                         <div className="input-group">
                             <FaLock className="input-icon"/>
@@ -148,6 +128,42 @@ export default function SignIn() {
                             />
                         </div>
 
+                        <div className="row">
+                            <div className="input-group">
+                                <FaUser className="input-icon"/>
+                                <input placeholder="FirstName..."
+                                       name="firstName"
+                                       value={formData.firstName}
+                                       onChange={handleChange}
+                                />
+                            </div>
+                            <div className="input-group">
+                                <FaUser className="input-icon"/>
+                                <input placeholder="LastName..."
+                                       name="lastName"
+                                       value={formData.lastName}
+                                       onChange={handleChange}
+                                />
+                            </div>
+                            <div className="input-group">
+                                <FaUser className="input-icon"/>
+                                <input placeholder="Phone..."
+                                       name="phone"
+                                       value={formData.phone}
+                                       onChange={handleChange}
+                                />
+                            </div>
+                            <div className="input-group">
+                                <FaUser className="input-icon"/>
+                                <input placeholder="Cin..."
+                                       name="cin"
+                                       value={formData.cin}
+                                       onChange={handleChange}
+                                />
+                            </div>
+                        </div>
+
+
                         <small className="hint">Must be at least 8 characters.</small>
 
                         <button className="signup-btn" onClick={handleSubmit} disabled={loading}>
@@ -157,7 +173,7 @@ export default function SignIn() {
                         <div className="or">OR SIGN UP WITH</div>
 
                         <div className="socials">
-                            <button className="social-btn">Google</button>
+                        <button className="social-btn">Google</button>
                             <button className="social-btn">Facebook</button>
                         </div>
 

@@ -4,7 +4,7 @@ import {
     FaBell,
     FaComments,
     FaChartBar,
-    FaFolder,
+    FaUserTie,
     FaCog,
     FaUsers,
     FaUser,
@@ -15,20 +15,22 @@ import {
     FaEdit,
     FaPhone,
     FaBoxes,
-    FaSearch
+    FaTruckLoading
 } from "react-icons/fa";
+import { FaTruck } from "react-icons/fa";
 import { FiGrid, FiCreditCard } from "react-icons/fi";
 import UsersRoleChart from "./UsersRoleChart";
 import UsersStatusChart from "./UsersStatusChart";
+import axios from "axios";
 
 export default function Admin() {
     const [activeSection, setActiveSection] = useState("dashboard");
     const [showForm, setShowForm] = useState(false);
     const [openProfile, setOpenProfile] = useState(false);
     const dropdownRef = useRef(null);
-
+    const [profile, setProfile] = useState(null);
     // ===================== Profile States =====================
-    const API_URL = "http://localhost:8096/v1/users";
+    const API_URL = "http://localhost:8098/v1/users";
     const token = localStorage.getItem("token");
     const adminId = 1; // replace with dynamic ID if needed
     const [adminData, setAdminData] = useState(null);
@@ -36,7 +38,9 @@ export default function Admin() {
     const [error, setError] = useState(null);
     const [users, setUsers] = useState([]);
     const [editingUser, setEditingUser] = useState(null);
-
+    const isValidEmail = (email) => {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    };
     const [userData, setUserData] = useState({
         email: "",
         password: "",
@@ -46,10 +50,25 @@ export default function Admin() {
         cin: "",
         role: ["Manager"]
     });
-
+    const [formError, setFormError] = useState("");
     const [profileData, setProfileData] = useState({
         metierRole: "Manager"
     });
+    const [currentPage, setCurrentPage] = useState(1);
+    const usersPerPage = 10;
+
+    const filteredUsers = users.filter(user => !user.roles.includes("Fournisseur"));
+    const indexOfLastUser = currentPage * usersPerPage;
+    const indexOfFirstUser = indexOfLastUser - usersPerPage;
+    const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
+    // ===================== fournisseur pages ===================
+    const [currentPageFournisseurs, setCurrentPageFournisseurs] = useState(1);
+
+    const fournisseurs = users.filter(user => user.roles.includes("Fournisseur"));
+
+    const indexOfLastFournisseur = currentPageFournisseurs * usersPerPage;
+    const indexOfFirstFournisseur = indexOfLastFournisseur - usersPerPage;
+    const currentFournisseurs = fournisseurs.slice(indexOfFirstFournisseur, indexOfLastFournisseur);
     // ===================== Click Outside Dropdown =====================
     useEffect(() => {
         function handleClickOutside(event) {
@@ -66,57 +85,55 @@ export default function Admin() {
     // ===================== Fetch Admin Profile =====================
 
     useEffect(() => {
-        if (activeSection === "profile") {
-            setLoading(true);
-            fetch(`${API_URL}/${adminId}`, {
-                headers: { Authorization: `Bearer ${token}` },
-            })
-                .then((res) => {
-                    if (!res.ok) {
-                        throw new Error(`Erreur ${res.status}: ${res.statusText}`);
+        const fetchProfile = async () => {
+            try {
+                const token = localStorage.getItem("token");
+                const res = await axios.get(
+                    "http://localhost:8060/v1/user-profiles/me",
+                    {
+                        headers: { Authorization: `Bearer ${token}` }
                     }
-                    return res.json();
-                })
-                .then((data) => {
-                    setAdminData(data);
-                    setLoading(false);
-                })
-                .catch((err) => {
-                    setError(err.message);
-                    setLoading(false);
-                });
-        }
-    }, [activeSection, token]);
+                );
+                console.log(res.data);
+                setProfile(res.data); // b7al ma katb9ach setAdminData?
+                setAdminData(res.data); // khas t3ammar state li katb9a kat3ml update
+            } catch (err) {
+                console.error("Error loading profile", err);
+            }
+        };
+        fetchProfile();
+    }, []);
 
     // ===================== Update Profile =====================
     const handleUpdate = (e) => {
         e.preventDefault();
+        const token = localStorage.getItem("token");
         const updatedData = {
             phone: adminData.phone,
             cin: adminData.cin,
         };
-        fetch(`${API_URL}/${adminId}`, {
-            method: "PATCH",
+        fetch(`http://localhost:8060/v1/user-profiles/me`, {
+            method: "PUT",
             headers: {
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${token}`,
             },
             body: JSON.stringify(updatedData),
         })
-            .then((res) => {
+            .then(res => {
                 if (!res.ok) throw new Error("Failed to update admin");
                 return res.json();
             })
-            .then((data) => {
-                setAdminData(data);
+            .then(data => {
+                setAdminData(data); // update state bach UI tban m3a data jdida
                 alert("Profile updated successfully");
             })
-            .catch((err) => alert("Error updating profile: " + err.message));
+            .catch(err => alert("Error updating profile: " + err.message));
     };
 
     const fetchUsers = async () => {
         try {
-            const res = await fetch("http://localhost:8096/v1/users", {
+            const res = await fetch("http://localhost:8098/v1/users", {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (!res.ok) throw new Error(`Erreur ${res.status}`);
@@ -131,8 +148,20 @@ export default function Admin() {
     };
 
     const createUser = async () => {
+
+        // ✅ Front validation
+        if (!isValidEmail(userData.email)) {
+            alert("Email invalide ❌");
+            return;
+        }
+
+        if (!userData.firstName || !userData.lastName || !userData.password) {
+            alert("Tous les champs sont obligatoires ❌");
+            return;
+        }
+
         try {
-            const userRes = await fetch("http://localhost:8096/v1/users/create", {
+            const userRes = await fetch("http://localhost:8098/v1/users/create", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -141,15 +170,23 @@ export default function Admin() {
                 body: JSON.stringify(userData)
             });
 
+
+            const data = await userRes.json();
+
             if (!userRes.ok) {
-                const err = await userRes.json();
-                throw new Error(err.message || "Erreur lors de la création");
+
+                throw new Error(
+                    data.message ||
+                    data.email ||
+                    "Erreur lors de la création ❌"
+                );
             }
 
-            const user = await userRes.json();
-            alert("User créé avec succès !");
-            fetchUsers(); // refresh liste men DB
+            alert("User créé avec succès ✅");
+
+            fetchUsers();
             setShowForm(false);
+
             setUserData({
                 email: "",
                 password: "",
@@ -159,9 +196,10 @@ export default function Admin() {
                 cin: "",
                 role: ["Manager"]
             });
+
         } catch (error) {
             console.error(error);
-            alert("Erreur: " + error.message);
+            alert(error.message);
         }
     };
 
@@ -206,7 +244,7 @@ export default function Admin() {
         if (!window.confirm("Are you sure you want to delete this user?")) return;
 
         try {
-            const res = await fetch(`http://localhost:8096/v1/users/${id}`, {
+            const res = await fetch(`http://localhost:8098/v1/users/${id}`, {
                 method: "DELETE",
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -222,7 +260,7 @@ export default function Admin() {
     }
     const handleToggleStatus = async (id, currentStatus) => {
         try {
-            await fetch(`http://localhost:8096/v1/users/${id}/status`, {
+            await fetch(`http://localhost:8098/v1/users/${id}/status`, {
                 method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",
@@ -261,9 +299,9 @@ export default function Admin() {
                         <FaChartBar/>
                     </li>
 
-                    <li className={activeSection === "products" ? "active" : ""}
-                        onClick={() => setActiveSection("products")}>
-                        <FaFolder/>
+                    <li className={activeSection === "fournisseurs" ? "active" : ""}
+                        onClick={() => setActiveSection("fournisseurs")}>
+                        <FaUserTie/>
                     </li>
 
                     <li className={activeSection === "users" ? "active" : ""}
@@ -316,7 +354,7 @@ export default function Admin() {
                                 <FaUser/>
                             </div>
                         </div>
-                        <p>{adminData?.firstName}</p>
+                        <p>{adminData?.prenom}</p>
                     </div>
                 </div>
 
@@ -345,8 +383,13 @@ export default function Admin() {
                             {/* Total Users */}
                             <div className="card">
                                 <div className="card-icon"><FaUsers/></div>
-                                <h3>{users.length}</h3>
+                                <h3>{users.filter(user => !user.roles.includes("Fournisseur")).length}</h3>
                                 <p>Total Users</p>
+                            </div>
+                            <div className="card">
+                                <div className="card-icon"><FaUserTie/></div>
+                                <h3>{users.filter(user => user.roles.includes("Fournisseur")).length}</h3>
+                                <p>Total Suppliers</p>
                             </div>
 
                             {/* Top Role */}
@@ -366,7 +409,7 @@ export default function Admin() {
                         </section>
 
                         {/* ===================== Users Charts ===================== */}
-                        <div className="charts-row" style={{ marginTop: "40px" }}>
+                        <div className="charts-row" style={{marginTop: "40px"}}>
 
                             <section className="role-chart-section">
                                 <h3>Users by Role</h3>
@@ -430,12 +473,208 @@ export default function Admin() {
                     </div>
                 )}
 
+                {/* ===================== fournisseurs ===================== */}
+                {activeSection === "fournisseurs" && (
+                    <div className="panel large">
+                        <div className="users-info">
+                            <p>
+                                Here, you can manage all suppliers. allowing you to easily view,
+                                edit, or remove suppliers without affecting other types of users.
+                                You can update their contact information, CIN, phone number, and email, as well as
+                                activate or deactivate their account.
+                                Use the actions in the table to efficiently manage suppliers and keep your supplier
+                                database organized and up-to-date. </p>
+                        </div>
+
+                        <div className="users-header">
+                            <div className="title-block">
+                                <h3>Suppliers Management</h3>
+                                <p>List of All Suppliers</p>
+                            </div>
+                            <button className="create-btn" onClick={() => setShowForm(!showForm)}>
+                                {showForm ? "Cancel" : "+ Create Supplier"}
+                            </button>
+                        </div>
+
+                        <table className="stock-table users-table">
+                            <thead>
+                            <tr>
+                                <th>First Name</th>
+                                <th>Last Name</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {currentFournisseurs.map(user => (
+                                <tr key={user.id}>
+                                    <td>{user.firstName}</td>
+                                    <td>{user.lastName}</td>
+                                    <td>{user.email}</td>
+                                    <td>{user.phone}</td>
+                                    <td>{user.cin}</td>
+                                    <td>{user.roles?.join(", ")}</td>
+                                    <td className="actions">
+                                        <button className="edit-btn" onClick={() => setEditingUser(user)}>
+                                            <FaEdit/>
+                                        </button>
+                                        <button className="delete-btn" onClick={() => handleDelete(user.id)}>
+                                            <FaTrash/>
+                                        </button>
+                                        <label className="switch">
+                                            <input
+                                                type="checkbox"
+                                                checked={user.active}
+                                                onChange={() => handleToggleStatus(user.id, user.active)}
+                                            />
+                                            <span className="slider round"></span>
+                                        </label>
+                                    </td>
+                                </tr>
+                            ))}
+                            </tbody>
+                        </table>
+
+                        <div className="pagination">
+                            <button
+                                onClick={() => setCurrentPageFournisseurs(prev => Math.max(prev - 1, 1))}
+                                disabled={currentPageFournisseurs === 1}
+                            >
+                                Previous
+                            </button>
+
+                            {Array.from({length: Math.ceil(fournisseurs.length / usersPerPage)}, (_, i) => (
+                                <button
+                                    key={i + 1}
+                                    onClick={() => setCurrentPageFournisseurs(i + 1)}
+                                    className={currentPageFournisseurs === i + 1 ? "active" : ""}
+                                >
+                                    {i + 1}
+                                </button>
+                            ))}
+
+                            <button
+                                onClick={() =>
+                                    setCurrentPageFournisseurs(prev => Math.min(prev + 1, Math.ceil(fournisseurs.length / usersPerPage)))
+                                }
+                                disabled={currentPageFournisseurs === Math.ceil(fournisseurs.length / usersPerPage)}
+                            >
+                                Next
+                            </button>
+                        </div>
+
+                        {showForm && (
+                            <div className="user-form-container">
+                                <h4><FaUsers/> Create New Fournisseur</h4>
+                                <form className="user-form" onSubmit={(e) => {
+                                    e.preventDefault();
+                                    createUser();
+                                }}>
+                                    <div className="input-group">
+                                        <FaUser className="input-icon"/>
+                                        <input
+                                            type="text"
+                                            placeholder="First Name"
+                                            value={userData.firstName}
+                                            onChange={(e) =>
+                                                setUserData({
+                                                    ...userData,
+                                                    firstName: e.target.value,
+                                                    role: ["Fournisseur"]
+                                                })
+                                            }
+                                        />
+                                    </div>
+                                    <div className="input-group">
+                                        <FaUser className="input-icon"/>
+                                        <input
+                                            type="text"
+                                            placeholder="Last Name"
+                                            value={userData.lastName}
+                                            onChange={(e) => setUserData({...userData, lastName: e.target.value})}
+                                        />
+                                    </div>
+                                    <div className="input-group">
+                                        <FaEnvelope className="input-icon"/>
+                                        <input
+                                            type="email"
+                                            placeholder="Email"
+                                            value={userData.email}
+                                            onChange={(e) => setUserData({...userData, email: e.target.value})}
+                                        />
+                                    </div>
+                                    <div className="input-group">
+                                        <FaLock className="input-icon"/>
+                                        <input
+                                            type="password"
+                                            placeholder="Password"
+                                            value={userData.password}
+                                            onChange={(e) => setUserData({...userData, password: e.target.value})}
+                                        />
+                                    </div>
+                                    {/* Force role Fournisseur */}
+                                    <input type="hidden" value="Fournisseur"/>
+                                    <button className="create-btn">Save Fournisseur</button>
+                                </form>
+                            </div>
+                        )}
+
+                        {editingUser && editingUser.roles.includes("Fournisseur") && (
+                            <div className="user-form-container">
+                                <h4><FaEdit/> Edit Fournisseur</h4>
+                                <form className="user-form" onSubmit={(e) => {
+                                    e.preventDefault();
+                                    handleUpdateUser();
+                                }}>
+                                    <div className="input-group">
+                                        <FaUser className="input-icon"/>
+                                        <input
+                                            type="text"
+                                            placeholder="First Name"
+                                            value={editingUser.firstName}
+                                            onChange={e => setEditingUser({...editingUser, firstName: e.target.value})}
+                                        />
+                                    </div>
+                                    <div className="input-group">
+                                        <FaUser className="input-icon"/>
+                                        <input
+                                            type="text"
+                                            placeholder="Last Name"
+                                            value={editingUser.lastName}
+                                            onChange={e => setEditingUser({...editingUser, lastName: e.target.value})}
+                                        />
+                                    </div>
+                                    <div className="input-group">
+                                        <FaEnvelope className="input-icon"/>
+                                        <input
+                                            type="email"
+                                            placeholder="Email"
+                                            value={editingUser.email}
+                                            onChange={e => setEditingUser({...editingUser, email: e.target.value})}
+                                        />
+                                    </div>
+                                    <div className="form-actions">
+                                        <button type="submit" className="change-btn">Save Changes</button>
+                                        <button type="button" className="cancel-btn"
+                                                onClick={() => setEditingUser(null)}>Cancel
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        )}
+                    </div>
+                )}
+                {/* ===================== users ===================== */}
                 {activeSection === "users" && (
                     <div className="panel large">
                         <div className="users-info">
                             <p>
-                                Here, you can efficiently manage all users. You can create new accounts for users, update their information, delete users who no longer need access, and activate or deactivate their status as needed.
-                                Use the actions in the table below to quickly perform these tasks and maintain an organized and secure user base.
+                                Here, you can efficiently manage all users. You can create new accounts for users,
+                                update their information, delete users who no longer need access, and activate or
+                                deactivate their status as needed.
+                                Use the actions in the table below to quickly perform these tasks and maintain an
+                                organized and secure user base.
                             </p>
                         </div>
                         <div className="users-header">
@@ -454,21 +693,17 @@ export default function Admin() {
                                 <th> First Name</th>
                                 <th> Last Name</th>
                                 <th> Email</th>
-                                <th> Phone</th>
-                                <th> CIN</th>
                                 <th>Role</th>
                                 <th>Actions</th>
                             </tr>
                             </thead>
                             <tbody>
-                            {users.map((user) => (
+                            {currentUsers.map(user => (
                                 <tr key={user.id}>
 
                                     <td>{user.firstName}</td>
                                     <td>{user.lastName}</td>
                                     <td>{user.email}</td>
-                                    <td>{user.phone}</td>
-                                    <td>{user.cin}</td>
                                     <td>{user.roles?.join(", ")}</td>
 
                                     <td className="actions">
@@ -502,7 +737,32 @@ export default function Admin() {
                             ))}
                             </tbody>
                         </table>
+                        {/* ================= Pagination Buttons ================= */}
+                        <div className="pagination">
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                disabled={currentPage === 1}
+                            >
+                                Previous
+                            </button>
 
+                            {Array.from({ length: Math.ceil(users.filter(u => !u.roles.includes("Fournisseur")).length / usersPerPage) }, (_, i) => (
+                                <button
+                                    key={i + 1}
+                                    onClick={() => setCurrentPage(i + 1)}
+                                    className={currentPage === i + 1 ? "active" : ""}
+                                >
+                                    {i + 1}
+                                </button>
+                            ))}
+
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(users.filter(u => !u.roles.includes("Fournisseur")).length / usersPerPage)))}
+                                disabled={currentPage === Math.ceil(users.filter(u => !u.roles.includes("Fournisseur")).length / usersPerPage)}
+                            >
+                                Next
+                            </button>
+                        </div>
                         {showForm && (
                             <div className="user-form-container">
                                 <h4><FaUsers/> Create New User</h4>
@@ -510,6 +770,7 @@ export default function Admin() {
                                     e.preventDefault();
                                     createUser();
                                 }}>
+                                    {formError && <p className="error-text">{formError}</p>}
 
                                     <div className="input-group">
                                         <FaUser className="input-icon"/>
@@ -558,25 +819,6 @@ export default function Admin() {
                                             <option value="Procurement Manager">Procurement Manager</option>
                                             <option value="Inventory Manager">Inventory Manager</option>
                                         </select>
-                                    </div>
-                                    <div className="input-group">
-                                        <FaPhone className="input-icon"/>
-                                        <input
-                                            type="text"
-                                            placeholder="Phone"
-                                            value={userData.phone}
-                                            onChange={(e) => setUserData({...userData, phone: e.target.value})}
-                                        />
-                                    </div>
-
-                                    <div className="input-group">
-                                        <FiCreditCard className="input-icon"/>
-                                        <input
-                                            type="text"
-                                            placeholder="CIN"
-                                            value={userData.cin}
-                                            onChange={(e) => setUserData({...userData, cin: e.target.value})}
-                                        />
                                     </div>
 
                                     <div className="input-group">
@@ -644,27 +886,6 @@ export default function Admin() {
                                             <option value="Inventory Manager">Inventory Manager</option>
                                         </select>
                                     </div>
-
-                                    <div className="input-group">
-                                        <FaPhone className="input-icon"/>
-                                        <input
-                                            type="text"
-                                            placeholder="Phone"
-                                            value={editingUser.phone || ""}
-                                            onChange={e => setEditingUser({...editingUser, phone: e.target.value})}
-                                        />
-                                    </div>
-
-                                    <div className="input-group">
-                                        <FiCreditCard className="input-icon"/>
-                                        <input
-                                            type="text"
-                                            placeholder="CIN"
-                                            value={editingUser.cin || ""}
-                                            onChange={e => setEditingUser({...editingUser, cin: e.target.value})}
-                                        />
-                                    </div>
-
                                     <div className="form-actions">
                                         <button type="submit" className="change-btn">Save Changes</button>
                                         <button type="button" className="cancel-btn"
@@ -696,12 +917,13 @@ export default function Admin() {
                         </div>
                         {loading && <p>Loading profile...</p>}
                         {adminData && (
+
                             <form className="profile-form" onSubmit={handleUpdate}>
                                 <div className="form-group"><label>First Name</label><input type="text"
-                                                                                            value={adminData?.firstName}
+                                                                                            value={adminData?.nom}
                                                                                             readOnly/></div>
                                 <div className="form-group"><label>Last Name</label><input type="text"
-                                                                                           value={adminData?.lastName}
+                                                                                           value={adminData?.prenom}
                                                                                            readOnly/></div>
                                 <div className="form-group"><label>Email</label><input type="email"
                                                                                        value={adminData.email}
@@ -714,12 +936,11 @@ export default function Admin() {
                                         placeholder="Enter phone number"
                                     /></div>
                                 <div className="form-group"><label>CIN</label>
-                                    <input type="text" value={adminData.cin || ""}
-                                           onChange={e => setAdminData({...adminData, cin: e.target.value})}
-                                           placeholder="Enter CIN"/>
-                                </div>
-                                <div className="form-group"><label>Status</label>
-                                    <input type="text" value={adminData.active ? "Active" : "Inactive"} readOnly/>
+                                    <input
+                                        type="text"
+                                        value={adminData.cin || ""}
+                                        onChange={e => setAdminData({...adminData, cin: e.target.value})}
+                                        placeholder="Enter CIN"/>
                                 </div>
                                 <div className="form-group"><label>Join Date</label>
                                     <input type="text" value={adminData.createdAt || ""} readOnly/>

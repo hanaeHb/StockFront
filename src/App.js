@@ -9,6 +9,7 @@ import InventoryManager from "./pages/InventoryManager"
 import ProcurementManager from "./pages/ProcurementManager"
 import PrivateRoute from "./pages/PrivateRoute";
 import Fournisseur from "./pages/fournisseur";
+import PendingValidation from "./pages/pending-validation";
 
 
 function App() {
@@ -18,7 +19,7 @@ function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/signin" element={<Signin />} />
-
+                <Route path="/pending-validation" element={<PendingValidation />} />
                 {/* Protected admin route */}
                 <Route element={<PrivateRoute role="ADMIN" />}>
                     <Route path="/admin" element={<Admin />} />
@@ -33,8 +34,8 @@ function App() {
                 <Route element={<PrivateRoute role="Inventory Manager" />}>
                     <Route path="/InventoryManager" element={<InventoryManager />} />
                 </Route>
-                <Route element={<PrivateRoute role="FOURNISSEUR" />}>
-                    <Route path="/Fournisseur" element={<Fournisseur />} />
+                <Route element={<PrivateRoute role="Fournisseur" />}>
+                    <Route path="/fournisseur" element={<Fournisseur />} />
                 </Route>
                 {/* fallback */}
                 <Route path="*" element={<Navigate to="/" />} />

@@ -47,6 +47,49 @@ export default function ProcurementManager() {
         fetchProfile();
 
     }, []);
+
+    const [pendingFournisseurs, setPendingFournisseurs] = useState([]);
+
+    const updateNotificationStatus = async (id, status) => {
+        try {
+            const token = localStorage.getItem("token");
+
+            // API li katupdate status dyal notification
+            await axios.put(
+                `http://localhost:5003/api/notifications/${id}/status`,
+                { status }, // "validated" ou "rejected"
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            alert(`Fournisseur ${status === "validated" ? "validé" : "refusé"} avec succès!`);
+
+            // update frontend state: retire notification men pending list
+            setPendingFournisseurs(prev => prev.filter(f => f._id !== id));
+
+        } catch (err) {
+            console.error(`Erreur lors du ${status}`, err.response ? err.response.data : err.message);
+            alert(`Erreur lors du ${status} du fournisseur`);
+        }
+    };
+
+    const validateFournisseur = (id) => updateNotificationStatus(id, "validated");
+    const rejectFournisseur = (id) => updateNotificationStatus(id, "rejected");
+    useEffect(() => {
+        const fetchPendingFournisseurs = async () => {
+            try {
+                const token = localStorage.getItem("token");
+                const res = await axios.get("http://localhost:5003/api/notifications/pending", {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                console.log("Pending fournisseurs response:", res.data);
+                setPendingFournisseurs(res.data);
+            } catch (err) {
+                console.error("Erreur fetching pending fournisseurs", err.response ? err.response.data : err.message);
+            }
+        };
+
+        fetchPendingFournisseurs();
+    }, []);
     return (
         <div className="manager-container">
 
@@ -104,14 +147,17 @@ export default function ProcurementManager() {
                     <div className="nav-right">
 
                         <div className="nav-avatar small">
-                            <FaBell/>
+                            <li className={activeSection === "bell" ? "active" : ""}
+                                onClick={() => setActiveSection("bell")}>
+                                <FaBell/>
+                            </li>
                             <span className="badge-number">2</span>
                         </div>
 
                         <div className="nav-avatar"
                              onClick={() => setActiveSection("profile")}
                              style={{cursor: "pointer"}}>
-                            {profile?.image ? (
+                        {profile?.image ? (
                                 <img src={profile.image} alt="avatar" className="nav-avatar-img"/>
                             ) : (
                                 <FaUser size={24}/>
@@ -314,6 +360,71 @@ export default function ProcurementManager() {
                                                                                        readOnly/></div>
                         </div>
                     </div>
+                )}
+
+                {activeSection === "bell" && (
+                    <>
+                        <header className="header">
+                            <h1>Fournisseurs en attente</h1>
+                            <p className="subtitle">
+                                Validez ou refusez les nouveaux fournisseurs.
+                            </p>
+                        </header>
+
+                        <section className="panel large">
+
+                            {pendingFournisseurs.length === 0 ? (
+                                <p className="empty-msg">Aucun fournisseur en attente.</p>
+                            ) : (
+
+                                <table className="fournisseur-table">
+
+                                    <thead>
+                                    <tr>
+                                        <th>Nom</th>
+                                        <th>Email</th>
+                                        <th>Téléphone</th>
+                                        <th>Date</th>
+                                        <th>Action</th>
+                                    </tr>
+                                    </thead>
+
+                                    <tbody>
+                                    {pendingFournisseurs.map((f) => (
+                                        <tr key={f._id}>
+
+                                            <td>{f.firstName} {f.lastName}</td>
+                                            <td>{f.email}</td>
+                                            <td>{f.role}</td>
+                                            <td>{new Date(f.dateAlerte).toLocaleDateString()}</td>
+
+                                            <td className="actions">
+
+                                                <button
+                                                    className="btn-validate"
+                                                    onClick={() => validateFournisseur(f._id)}
+                                                >
+                                                    Valider
+                                                </button>
+
+                                                <button
+                                                    className="btn-reject"
+                                                    onClick={() => rejectFournisseur(f._id)}
+                                                >
+                                                    Refuser
+                                                </button>
+
+                                            </td>
+
+                                        </tr>
+                                    ))}
+                                    </tbody>
+
+                                </table>
+                            )}
+
+                        </section>
+                    </>
                 )}
             </main>
 
