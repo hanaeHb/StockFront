@@ -278,6 +278,46 @@ export default function Admin() {
             alert("Erreur lors du changement du statut");
         }
     };
+
+    const [pendingFournisseurs, setPendingFournisseurs] = useState([]);
+    const [validatedFournisseurs, setValidatedFournisseurs] = useState([]);
+
+    // Fetch pending suppliers
+    const fetchPendingFournisseurs = async () => {
+        try {
+            const res = await fetch(
+                "http://localhost:5003/api/notifications/pending",
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            if (!res.ok) throw new Error("Erreur fetch pending");
+            const data = await res.json();
+            // تأكدي structure ديال backend
+            setPendingFournisseurs(Array.isArray(data) ? data : data.fournisseurs || []);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    // Fetch validated suppliers
+    const fetchValidatedFournisseurs = async () => {
+        try {
+            const res = await fetch(
+                "http://localhost:5003/api/notifications/validated",
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            if (!res.ok) throw new Error("Erreur fetch validated");
+            const data = await res.json();
+            setValidatedFournisseurs(Array.isArray(data) ? data : data.fournisseurs || []);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    useEffect(() => {
+        fetchPendingFournisseurs();
+        fetchValidatedFournisseurs();
+    }, []);
+
     return (
         <div className="admin-container">
 
@@ -486,183 +526,78 @@ export default function Admin() {
                                 database organized and up-to-date. </p>
                         </div>
 
-                        <div className="users-header">
-                            <div className="title-block">
-                                <h3>Suppliers Management</h3>
-                                <p>List of All Suppliers</p>
-                            </div>
-                            <button className="create-btn" onClick={() => setShowForm(!showForm)}>
-                                {showForm ? "Cancel" : "+ Create Supplier"}
-                            </button>
-                        </div>
+                        {/* ===================== Pending Fournisseurs ===================== */}
+                        <div className="panel large">
+                            <h3>Pending Suppliers</h3>
 
-                        <table className="stock-table users-table">
-                            <thead>
-                            <tr>
-                                <th>First Name</th>
-                                <th>Last Name</th>
-                                <th>Email</th>
-                                <th>Role</th>
-                                <th>Actions</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {currentFournisseurs.map(user => (
-                                <tr key={user.id}>
-                                    <td>{user.firstName}</td>
-                                    <td>{user.lastName}</td>
-                                    <td>{user.email}</td>
-                                    <td>{user.phone}</td>
-                                    <td>{user.cin}</td>
-                                    <td>{user.roles?.join(", ")}</td>
-                                    <td className="actions">
-                                        <button className="edit-btn" onClick={() => setEditingUser(user)}>
-                                            <FaEdit/>
-                                        </button>
-                                        <button className="delete-btn" onClick={() => handleDelete(user.id)}>
-                                            <FaTrash/>
-                                        </button>
-                                        <label className="switch">
-                                            <input
-                                                type="checkbox"
-                                                checked={user.active}
-                                                onChange={() => handleToggleStatus(user.id, user.active)}
-                                            />
-                                            <span className="slider round"></span>
-                                        </label>
-                                    </td>
+                            <table className="stock-table users-table">
+                                <thead>
+                                <tr>
+                                    <th>First Name</th>
+                                    <th>Last Name</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Cin</th>
+                                    <th>Request Date</th>
                                 </tr>
-                            ))}
-                            </tbody>
-                        </table>
+                                </thead>
 
-                        <div className="pagination">
-                            <button
-                                onClick={() => setCurrentPageFournisseurs(prev => Math.max(prev - 1, 1))}
-                                disabled={currentPageFournisseurs === 1}
-                            >
-                                Previous
-                            </button>
-
-                            {Array.from({length: Math.ceil(fournisseurs.length / usersPerPage)}, (_, i) => (
-                                <button
-                                    key={i + 1}
-                                    onClick={() => setCurrentPageFournisseurs(i + 1)}
-                                    className={currentPageFournisseurs === i + 1 ? "active" : ""}
-                                >
-                                    {i + 1}
-                                </button>
-                            ))}
-
-                            <button
-                                onClick={() =>
-                                    setCurrentPageFournisseurs(prev => Math.min(prev + 1, Math.ceil(fournisseurs.length / usersPerPage)))
-                                }
-                                disabled={currentPageFournisseurs === Math.ceil(fournisseurs.length / usersPerPage)}
-                            >
-                                Next
-                            </button>
+                                <tbody>
+                                {Array.isArray(pendingFournisseurs) && pendingFournisseurs.length > 0 ? (
+                                    pendingFournisseurs.map(f => (
+                                        <tr key={f.id || f._id}>
+                                            <td>{f.firstName}</td>
+                                            <td>{f.lastName}</td>
+                                            <td>{f.phone}</td>
+                                            <td>{f.cin}</td>
+                                            <td>{f.email}</td>
+                                            <td>{new Date(f.dateAlerte).toLocaleDateString()}</td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan="5">No pending suppliers</td>
+                                    </tr>
+                                )}
+                                </tbody>
+                            </table>
                         </div>
+                        {/* ===================== Validated Fournisseurs ===================== */}
+                        <div className="panel large">
+                            <h3>Validated Suppliers</h3>
 
-                        {showForm && (
-                            <div className="user-form-container">
-                                <h4><FaUsers/> Create New Fournisseur</h4>
-                                <form className="user-form" onSubmit={(e) => {
-                                    e.preventDefault();
-                                    createUser();
-                                }}>
-                                    <div className="input-group">
-                                        <FaUser className="input-icon"/>
-                                        <input
-                                            type="text"
-                                            placeholder="First Name"
-                                            value={userData.firstName}
-                                            onChange={(e) =>
-                                                setUserData({
-                                                    ...userData,
-                                                    firstName: e.target.value,
-                                                    role: ["Fournisseur"]
-                                                })
-                                            }
-                                        />
-                                    </div>
-                                    <div className="input-group">
-                                        <FaUser className="input-icon"/>
-                                        <input
-                                            type="text"
-                                            placeholder="Last Name"
-                                            value={userData.lastName}
-                                            onChange={(e) => setUserData({...userData, lastName: e.target.value})}
-                                        />
-                                    </div>
-                                    <div className="input-group">
-                                        <FaEnvelope className="input-icon"/>
-                                        <input
-                                            type="email"
-                                            placeholder="Email"
-                                            value={userData.email}
-                                            onChange={(e) => setUserData({...userData, email: e.target.value})}
-                                        />
-                                    </div>
-                                    <div className="input-group">
-                                        <FaLock className="input-icon"/>
-                                        <input
-                                            type="password"
-                                            placeholder="Password"
-                                            value={userData.password}
-                                            onChange={(e) => setUserData({...userData, password: e.target.value})}
-                                        />
-                                    </div>
-                                    {/* Force role Fournisseur */}
-                                    <input type="hidden" value="Fournisseur"/>
-                                    <button className="create-btn">Save Fournisseur</button>
-                                </form>
-                            </div>
-                        )}
+                            <table className="stock-table users-table">
+                                <thead>
+                                <tr>
+                                    <th>First Name</th>
+                                    <th>Last Name</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Cin</th>
+                                    <th>Validate Date</th>
+                                </tr>
+                                </thead>
 
-                        {editingUser && editingUser.roles.includes("Fournisseur") && (
-                            <div className="user-form-container">
-                                <h4><FaEdit/> Edit Fournisseur</h4>
-                                <form className="user-form" onSubmit={(e) => {
-                                    e.preventDefault();
-                                    handleUpdateUser();
-                                }}>
-                                    <div className="input-group">
-                                        <FaUser className="input-icon"/>
-                                        <input
-                                            type="text"
-                                            placeholder="First Name"
-                                            value={editingUser.firstName}
-                                            onChange={e => setEditingUser({...editingUser, firstName: e.target.value})}
-                                        />
-                                    </div>
-                                    <div className="input-group">
-                                        <FaUser className="input-icon"/>
-                                        <input
-                                            type="text"
-                                            placeholder="Last Name"
-                                            value={editingUser.lastName}
-                                            onChange={e => setEditingUser({...editingUser, lastName: e.target.value})}
-                                        />
-                                    </div>
-                                    <div className="input-group">
-                                        <FaEnvelope className="input-icon"/>
-                                        <input
-                                            type="email"
-                                            placeholder="Email"
-                                            value={editingUser.email}
-                                            onChange={e => setEditingUser({...editingUser, email: e.target.value})}
-                                        />
-                                    </div>
-                                    <div className="form-actions">
-                                        <button type="submit" className="change-btn">Save Changes</button>
-                                        <button type="button" className="cancel-btn"
-                                                onClick={() => setEditingUser(null)}>Cancel
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        )}
+                                <tbody>
+                                {Array.isArray(validatedFournisseurs) && validatedFournisseurs.length > 0 ? (
+                                    validatedFournisseurs.map(f => (
+                                        <tr key={f.id || f._id}>
+                                            <td>{f.firstName}</td>
+                                            <td>{f.lastName}</td>
+                                            <td>{f.email}</td>
+                                            <td>{f.phone}</td>
+                                            <td>{f.cin}</td>
+                                            <td>{new Date(f.dateAlerte).toLocaleDateString()}</td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan="5">No validated suppliers</td>
+                                    </tr>
+                                )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 )}
                 {/* ===================== users ===================== */}

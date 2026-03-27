@@ -90,6 +90,38 @@ export default function ProcurementManager() {
 
         fetchPendingFournisseurs();
     }, []);
+
+
+    const downloadCV = async (cvFile) => {
+        try {
+            if (!cvFile) {
+                alert("CV not available");
+                return;
+            }
+
+            const token = localStorage.getItem("token");
+
+            const response = await axios.get(
+                `http://localhost:8098/v1/users/download/${cvFile}`, // path men Security service
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                    responseType: "blob" // important bach ydownload raw file
+                }
+            );
+
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement("a");
+            link.href = url;
+            link.setAttribute("download", cvFile);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+
+        } catch (err) {
+            console.error("Error downloading CV:", err.response || err.message);
+            alert("Failed to download CV. Make sure you are logged in.");
+        }
+    };
     return (
         <div className="manager-container">
 
@@ -381,10 +413,13 @@ export default function ProcurementManager() {
 
                                     <thead>
                                     <tr>
-                                        <th>Nom</th>
+                                        <th>Name</th>
                                         <th>Email</th>
-                                        <th>Téléphone</th>
+                                        <th>Phone</th>
+                                        <th>Cin</th>
                                         <th>Date</th>
+                                        <th>Role</th>
+                                        <th>CV</th>
                                         <th>Action</th>
                                     </tr>
                                     </thead>
@@ -395,8 +430,18 @@ export default function ProcurementManager() {
 
                                             <td>{f.firstName} {f.lastName}</td>
                                             <td>{f.email}</td>
+                                            <td>{f.phone}</td>
+                                            <td>{f.cin}</td>
                                             <td>{f.role}</td>
                                             <td>{new Date(f.dateAlerte).toLocaleDateString()}</td>
+                                            <td>
+                                                {f.cvFile ? (
+                                                    <button
+                                                        onClick={() => downloadCV(f.cvFile.replace(/^\/?uploads\/cv\//, ''))}>
+                                                        Download CV
+                                                    </button>
+                                                ) : "N/A"}
+                                            </td>
 
                                             <td className="actions">
 

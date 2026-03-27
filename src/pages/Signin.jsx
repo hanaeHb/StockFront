@@ -19,7 +19,8 @@ export default function SignIn() {
         email: "",
         phone: "",
         cin: "",
-        password: ""
+        password: "",
+        cv : ""
     });
 
     const [loading, setLoading] = useState(false);
@@ -35,17 +36,23 @@ export default function SignIn() {
         setError("");
 
         try {
-            const res = await axios.post("http://localhost:8098/v1/users/register", {
-                firstName: formData.firstName,
-                lastName: formData.lastName,
-                email: formData.email,
-                phone: formData.phone,
-                password: formData.password,
-                cin: formData.cin,
-                role: ["Fournisseur"]
-            }, {
-                headers: { "Content-Type": "application/json" }
-            });
+            const data = new FormData();
+            data.append("firstName", formData.firstName);
+            data.append("lastName", formData.lastName);
+            data.append("email", formData.email);
+            data.append("phone", formData.phone);
+            data.append("password", formData.password);
+            data.append("cin", formData.cin);
+            data.append("role", "Fournisseur");
+            if (formData.cv) {
+                data.append("cv", formData.cv); // <-- juste CV
+            }
+
+            const res = await axios.post(
+                "http://localhost:8098/v1/users/register",
+                data,
+                { headers: { "Content-Type": "multipart/form-data" } }
+            );
 
             console.log("Fournisseur registered:", res.data);
 
@@ -161,13 +168,21 @@ export default function SignIn() {
                                        onChange={handleChange}
                                 />
                             </div>
+                            <div className="input-group">
+                                <FaUser className="input-icon"/>
+                                <input
+                                    type="file"
+                                    name="cv"
+                                    onChange={(e) => setFormData({...formData, cv: e.target.files[0]})}
+                                />
+                            </div>
                         </div>
 
 
                         <small className="hint">Must be at least 8 characters.</small>
 
                         <button className="signup-btn" onClick={handleSubmit} disabled={loading}>
-                            {loading ? "Signing Up..." : "Sign Up"}
+                        {loading ? "Signing Up..." : "Sign Up"}
                         </button>
 
                         <div className="or">OR SIGN UP WITH</div>

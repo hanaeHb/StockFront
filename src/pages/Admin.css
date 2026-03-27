@@ -379,7 +379,7 @@
     background: white;
     color: #730d19;
     font-weight: 600;
-    text-align: center;
+    text-align: left;
     padding: 12px;
     border-radius: 8px;
 }
@@ -934,4 +934,12 @@ input:checked + .slider:before {
         padding: 4px 8px;
         font-size: 14px;
     }
+}
+
+.status-active {
+    background: #d4edda;
+    color: #155724;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-weight: bold;
 }
