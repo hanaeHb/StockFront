@@ -24,11 +24,11 @@ body {
 .signin-card {
     position: relative;
     width: 100%;
-    height: 750px;
+    height: 780px;
     display: grid;
     grid-template-columns: 1fr 1fr;
     background: white;
-    border-radius: 12px;
+    border-radius: 15px;
     overflow: hidden;
     font-family: "Berlin Sans FB Demi";
     background: radial-gradient(
@@ -222,7 +222,7 @@ input {
     color: #000000;
     padding: 12px 13px;
     border-radius: 8px;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
     font-size: 16px;
     outline: none;
     transition: 0.2s ease;
@@ -319,7 +319,6 @@ text-align: center;
     transition: 0.3s ease;
 }
 
-/* icon change color on focus */
 .input-group input:focus + .input-icon,
 .input-group input:focus ~ .input-icon {
     color: #730d19;
@@ -342,4 +341,53 @@ text-align: center;
     transform: scale(1.1);
     background: #730d19;
     color: white;
+}
+
+
+.upload-box {
+    width: 100%;
+    margin-bottom: 15px;
+}
+
+.upload-label input[type="file"] {
+    display: none;
+}
+
+.upload-content {
+    border: 2px dashed #730d19;
+    border-radius: 12px;
+
+    padding: 14px 16px;
+    text-align: center;
+
+    background: rgba(255,255,255,0.85);
+    transition: all 0.25s ease;
+    backdrop-filter: blur(5px);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+.upload-label:hover .upload-content {
+    border-color: #4facfe;
+    background: #f1e9d2;
+}
+
+.upload-icon {
+    font-size: 22px;
+}
+
+.upload-content p {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+}
+
+.upload-content small {
+    font-size: 11px;
+    color: #888;
+    margin-top: 2px;
 }

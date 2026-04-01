@@ -17,11 +17,19 @@ import {
     FaBoxes,
     FaTruckLoading
 } from "react-icons/fa";
+import { BiCategory } from "react-icons/bi";
+import { TbCategory } from "react-icons/tb";
+import { HiViewGridAdd } from "react-icons/hi";
 import { FaTruck } from "react-icons/fa";
+import "./CreateProduitForm";
 import { FiGrid, FiCreditCard } from "react-icons/fi";
 import UsersRoleChart from "./UsersRoleChart";
 import UsersStatusChart from "./UsersStatusChart";
 import axios from "axios";
+import CreateProduitForm from "./CreateProduitForm";
+import {motion} from "framer-motion";
+
+
 
 export default function Admin() {
     const [activeSection, setActiveSection] = useState("dashboard");
@@ -282,7 +290,6 @@ export default function Admin() {
     const [pendingFournisseurs, setPendingFournisseurs] = useState([]);
     const [validatedFournisseurs, setValidatedFournisseurs] = useState([]);
 
-    // Fetch pending suppliers
     const fetchPendingFournisseurs = async () => {
         try {
             const res = await fetch(
@@ -291,14 +298,13 @@ export default function Admin() {
             );
             if (!res.ok) throw new Error("Erreur fetch pending");
             const data = await res.json();
-            // تأكدي structure ديال backend
+
             setPendingFournisseurs(Array.isArray(data) ? data : data.fournisseurs || []);
         } catch (err) {
             console.error(err);
         }
     };
 
-    // Fetch validated suppliers
     const fetchValidatedFournisseurs = async () => {
         try {
             const res = await fetch(
@@ -306,18 +312,168 @@ export default function Admin() {
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             if (!res.ok) throw new Error("Erreur fetch validated");
-            const data = await res.json();
-            setValidatedFournisseurs(Array.isArray(data) ? data : data.fournisseurs || []);
+            const fournisseurs5003 = await res.json();
+            const fournisseursArray = Array.isArray(fournisseurs5003) ? fournisseurs5003 : fournisseurs5003.fournisseurs || [];
+
+            const resUsers = await fetch(
+                "http://localhost:8098/v1/users",
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            if (!resUsers.ok) throw new Error("Erreur fetch users");
+            const users = await resUsers.json();
+
+            const merged = fournisseursArray.map(f => {
+                const user = users.find(u => u.email === f.email);
+                return { ...f, active: user?.active || false };
+            });
+
+            setValidatedFournisseurs(merged);
+
         } catch (err) {
             console.error(err);
         }
     };
 
+    const downloadCV = async (cvFile) => {
+        try {
+            if (!cvFile) {
+                alert("CV not available");
+                return;
+            }
+
+            const token = localStorage.getItem("token");
+
+            const response = await axios.get(
+                `http://localhost:8098/v1/users/download/${cvFile}`,
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                    responseType: "blob"
+                }
+            );
+
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement("a");
+            link.href = url;
+            link.setAttribute("download", cvFile);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+
+        } catch (err) {
+            console.error("Error downloading CV:", err.response || err.message);
+            alert("Failed to download CV. Make sure you are logged in.");
+        }
+    };
     useEffect(() => {
         fetchPendingFournisseurs();
         fetchValidatedFournisseurs();
     }, []);
 
+    // ===================== Category States =====================
+    const [categories, setCategories] = useState([]);
+    const [showCategoryForm, setShowCategoryForm] = useState(false);
+    const [categoryData, setCategoryData] = useState({
+        nom: "",
+        description: ""
+    });
+
+    // Fetch Categories
+    const fetchCategories = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            const res = await axios.get("http://localhost:8062/v1/categories", {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setCategories(res.data);
+        } catch (err) {
+            console.error("Error fetching categories", err);
+        }
+    };
+
+    // Create Category
+    const createCategory = async (e) => {
+        e.preventDefault();
+        try {
+            const token = localStorage.getItem("token");
+            await axios.post("http://localhost:8062/v1/categories", categoryData, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            alert("Category created! ✅");
+            resetCategoryForm();
+            fetchCategories();
+        } catch (err) {
+            alert("Error during creation ❌");
+        }
+    };
+
+    // ===================== Category Update States =====================
+    const [isEditing, setIsEditing] = useState(false);
+    const [currentCategoryId, setCurrentCategoryId] = useState(null);
+
+    const handleEditClick = (cat) => {
+        setCategoryData({ nom: cat.nom, description: cat.description });
+        setCurrentCategoryId(cat.id);
+        setIsEditing(true);
+        setShowCategoryForm(true);
+    };
+
+    const updateCategory = async (e) => {
+        e.preventDefault();
+        try {
+            await axios.put(`http://localhost:8062/v1/categories/${currentCategoryId}`, categoryData, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            alert("Catégorie mise à jour ! ✅");
+            resetCategoryForm();
+            fetchCategories();
+        } catch (err) {
+            alert("Erreur lors de la modification ❌");
+        }
+    };
+    const resetCategoryForm = () => {
+        setCategoryData({ nom: "", description: "" });
+        setShowCategoryForm(false);
+        setIsEditing(false);
+        setCurrentCategoryId(null);
+    };
+    // Delete Category
+    const deleteCategory = async (id) => {
+        if (!window.confirm("Voulez-vous supprimer cette catégorie ?")) return;
+        try {
+            await axios.delete(`http://localhost:8062/v1/categories/${id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            fetchCategories();
+        } catch (err) {
+            alert("Impossible de supprimer : Catégorie liée à des produits ❌");
+        }
+    };
+
+    useEffect(() => {
+        if (activeSection === "categorys") {
+            fetchCategories();
+        }
+    }, [activeSection]);
+
+    const [products, setProducts] = useState([]);
+    const [searchTerm, setSearchTerm] = useState("");
+
+    const fetchProducts = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            const res = await axios.get("http://localhost:8062/v1/produits", {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setProducts(res.data);
+        } catch (err) {
+            console.error("Error fetching products", err);
+        }
+    };
+    useEffect(() => {
+        if (activeSection === "products") {
+            fetchProducts();
+        }
+    }, [activeSection]);
     return (
         <div className="admin-container">
 
@@ -352,6 +508,10 @@ export default function Admin() {
                         onClick={() => setActiveSection("products")}>
                         <FaBoxes/>
                     </li>
+                    <li className={activeSection === "categorys" ? "active" : ""}
+                        onClick={() => setActiveSection("categorys")}>
+                        <HiViewGridAdd/>
+                    </li>
                 </ul>
 
                 <ul className="bottom-menu">
@@ -381,9 +541,13 @@ export default function Admin() {
 
                     <div className="nav-right">
                         <div className="nav-badge">
-                            <div className="nav-avatar small">
-                                <FaBell/>
-                                <span className="badge-number">3</span>
+                            <div>
+                                <ul className="menu">
+                                    <li className={activeSection === "bell" ? "active" : ""}
+                                        onClick={() => setActiveSection("bell")}>
+                                        <FaBell/>
+                                    </li>
+                                </ul>
                             </div>
                         </div>
                         <div className="nav-dropdown" ref={dropdownRef}>
@@ -391,7 +555,7 @@ export default function Admin() {
                                 className="nav-avatar"
                                 onClick={() => setActiveSection("profile")}
                             >
-                                <FaUser/>
+                            <FaUser/>
                             </div>
                         </div>
                         <p>{adminData?.prenom}</p>
@@ -518,18 +682,19 @@ export default function Admin() {
                     <div className="panel large">
                         <div className="users-info">
                             <p>
-                                Here, you can manage all suppliers. allowing you to easily view,
-                                edit, or remove suppliers without affecting other types of users.
-                                You can update their contact information, CIN, phone number, and email, as well as
-                                activate or deactivate their account.
-                                Use the actions in the table to efficiently manage suppliers and keep your supplier
-                                database organized and up-to-date. </p>
+                                Here, you can view the list of suppliers that
+                                are pending and validated.
+                                You can activate or deactivatevalidated suppliers and
+                                easily manage their contact information.
+                            </p>
                         </div>
 
                         {/* ===================== Pending Fournisseurs ===================== */}
-                        <div className="panel large">
-                            <h3>Pending Suppliers</h3>
-
+                        <div className="pending-suppliers" style={{marginTop: "60px"}}>
+                            <h3 style={{textAlign: "center"}}>Pending Suppliers</h3>
+                            <p className="texts">
+                                Here you can manage all suppliers waiting for approval.
+                            </p>
                             <table className="stock-table users-table">
                                 <thead>
                                 <tr>
@@ -537,35 +702,46 @@ export default function Admin() {
                                     <th>Last Name</th>
                                     <th>Email</th>
                                     <th>Phone</th>
-                                    <th>Cin</th>
+                                    <th>CIN</th>
                                     <th>Request Date</th>
+                                    <th>CV</th>
                                 </tr>
                                 </thead>
-
                                 <tbody>
                                 {Array.isArray(pendingFournisseurs) && pendingFournisseurs.length > 0 ? (
                                     pendingFournisseurs.map(f => (
-                                        <tr key={f.id || f._id}>
+                                        <tr key={f._id || f.id}>
                                             <td>{f.firstName}</td>
                                             <td>{f.lastName}</td>
+                                            <td>{f.email}</td>
                                             <td>{f.phone}</td>
                                             <td>{f.cin}</td>
-                                            <td>{f.email}</td>
                                             <td>{new Date(f.dateAlerte).toLocaleDateString()}</td>
+                                            <td>
+                                                {f.cvFile ? (
+                                                    <button
+                                                        onClick={() => downloadCV(f.cvFile.replace(/^\/?uploads\/cv\//, ''))}>
+                                                        Download CV
+                                                    </button>
+                                                ) : "N/A"}
+                                            </td>
                                         </tr>
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan="5">No pending suppliers</td>
+                                        <td colSpan="7">No pending suppliers</td>
                                     </tr>
                                 )}
                                 </tbody>
                             </table>
                         </div>
-                        {/* ===================== Validated Fournisseurs ===================== */}
-                        <div className="panel large">
-                            <h3>Validated Suppliers</h3>
 
+                        {/* ===================== Validated Fournisseurs ===================== */}
+                        <div className="validated-suppliers" style={{marginTop: "60px"}}>
+                            <h3 style={{textAlign: "center"}}>Validated Suppliers</h3>
+                            <p className="texts">
+                                These suppliers are already approved and active.
+                            </p>
                             <table className="stock-table users-table">
                                 <thead>
                                 <tr>
@@ -573,26 +749,63 @@ export default function Admin() {
                                     <th>Last Name</th>
                                     <th>Email</th>
                                     <th>Phone</th>
-                                    <th>Cin</th>
+                                    <th>CIN</th>
                                     <th>Validate Date</th>
+                                    <th>CV</th>
+                                    <th>Actions</th>
                                 </tr>
                                 </thead>
-
                                 <tbody>
                                 {Array.isArray(validatedFournisseurs) && validatedFournisseurs.length > 0 ? (
                                     validatedFournisseurs.map(f => (
-                                        <tr key={f.id || f._id}>
+                                        <tr key={f._id || f.id}>
                                             <td>{f.firstName}</td>
                                             <td>{f.lastName}</td>
                                             <td>{f.email}</td>
                                             <td>{f.phone}</td>
                                             <td>{f.cin}</td>
                                             <td>{new Date(f.dateAlerte).toLocaleDateString()}</td>
+                                            <td>
+                                                {f.cvFile ? (
+                                                    <button
+                                                        onClick={() => downloadCV(f.cvFile.replace(/^\/?uploads\/cv\//, ''))}>
+                                                        Download CV
+                                                    </button>
+                                                ) : "N/A"}
+                                            </td>
+                                            <td>
+                                                <label className="switch">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={f.active}
+                                                        onChange={async () => {
+                                                            try {
+                                                                const user = await fetch(`http://localhost:8098/v1/users/${f.userId}/status`, {
+                                                                    method: "PATCH",
+                                                                    headers: {
+                                                                        "Content-Type": "application/json",
+                                                                        Authorization: `Bearer ${token}`
+                                                                    },
+                                                                    body: JSON.stringify({active: !f.active})
+                                                                });
+                                                                if (!user.ok) throw new Error("Failed to update status");
+
+                                                                fetchValidatedFournisseurs();
+
+                                                            } catch (err) {
+                                                                console.error(err);
+                                                                alert("Erreur lors du toggle: " + err.message);
+                                                            }
+                                                        }}
+                                                    />
+                                                    <span className="slider round"></span>
+                                                </label>
+                                            </td>
                                         </tr>
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan="5">No validated suppliers</td>
+                                        <td colSpan="6">No validated suppliers</td>
                                     </tr>
                                 )}
                                 </tbody>
@@ -882,6 +1095,184 @@ export default function Admin() {
                                 </div>
                                 <button type="submit" className="create-btn">Update Profile</button>
                             </form>
+                        )}
+                    </div>
+                )}
+                {/* Products Section */}
+                {activeSection === "products" && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="products-hub"
+                    >
+                        <div className="hub-header">
+                            <div>
+                                <h2 className="section-title">Inventory Repository</h2>
+                                <p className="section-subtitle">List of All Products</p>
+                            </div>
+                        </div>
+
+                        <div className="panel large glass-panel">
+                            <div className="panel-header-inline">
+                                <h3>Active Inventory</h3>
+                                <div className="table-search">
+                                    <input
+                                        type="text"
+                                        placeholder="Search by SKU or Name..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                            <table className="stock-table">
+                                <thead>
+                                <tr>
+                                    <th className="th-info">Product Info</th>
+                                    <th>Category</th>
+                                    <th>Stock Level</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {products
+                                    .filter(p => p.nom.toLowerCase().includes(searchTerm.toLowerCase()) || p.sku.toLowerCase().includes(searchTerm.toLowerCase()))
+                                    .map((product) => (
+                                        <tr key={product.id}>
+                                            <td>
+                                                <div className="td-info"
+                                                     style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
+                                                    {product.image && <img src={product.image} alt="p"/>}
+                                                    <div>
+                                                        <strong>{product.nom}</strong>
+                                                        <span>SKU: {product.sku}</span>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span className="badge-cat">
+                                                    {product.category ? product.category.nom : (product.categorie || "No Category")}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div className="stock-progress">
+                                                    <span>{product.quantiteDisponible ?? 0} units</span>
+
+                                                    <div className="mini-bar">
+                                                        <div style={{
+                                                            width: product.quantiteDisponible > (product.seuilCritique || 5) ? '80%' : '20%',
+                                                            backgroundColor: product.quantiteDisponible > (product.seuilCritique || 5) ? '#4facfe' : '#ef4444'
+                                                        }}></div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span
+                                                    className={`status-pill ${product.active ? 'available' : 'out-of-stock'}`}>
+                                                    {product.active ? "Active" : "Disabled"}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <button className="btn-edit-small">Edit</button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </motion.div>
+                )}
+                {activeSection === "categorys" && (
+                    <div className="section-content category-section">
+
+                        <div className="category-card-container">
+
+                            <div className="table-description">
+                                Category Management Hub: Use this dedicated panel to create new product categories, update existing specifications, or remove entries.
+                                This interface provides a complete overview of your category hierarchy to ensure a well-organized catalog.
+                            </div>
+                            <div className="table-header-row">
+                                <div className="title-block">
+                                    <h3>Category Management</h3>
+                                    <p>List of All Category</p>
+                                </div>
+                                <button className="btn-add" onClick={() => setShowCategoryForm(true)}>
+                                    + New Category
+                                </button>
+                            </div>
+
+                            {/* Table Container */}
+                            <div className="table-inner-wrapper">
+                                <table className="user-table">
+                                    <thead>
+                                    <tr>
+                                        <th>Category Name</th>
+                                        <th>Description</th>
+                                        <th style={{textAlign: "center"}}>Actions</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {categories.map((cat) => (
+                                        <tr key={cat.id}>
+                                            <td>
+                                                <span className="category-name-badge">{cat.nom}</span>
+                                            </td>
+                                            <td className="text-muted">
+                                                {cat.description || "No description available"}
+                                            </td>
+                                            <td>
+                                                <div className="actions" style={{justifyContent: "center"}}>
+                                                    <button className="edit-btn" title="Edit"
+                                                            onClick={() => handleEditClick(cat)}>
+                                                        <FaEdit/>
+                                                    </button>
+                                                    <button className="delete-btn" title="Delete"
+                                                            onClick={() => deleteCategory(cat.id)}>
+                                                        <FaTrash/>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        {showCategoryForm && (
+                            <div className="modal-overlay">
+                                <div className="modal-content">
+                                    <h3>{isEditing ? "Edit Category" : "Add a Category"}</h3>
+                                    <form onSubmit={isEditing ? updateCategory : createCategory}>
+                                        <div className="input-group">
+                                            <label>Name</label>
+                                            <input
+                                                type="text"
+                                                placeholder="e.g. Electronics"
+                                                value={categoryData.nom}
+                                                onChange={(e) => setCategoryData({...categoryData, nom: e.target.value})}
+                                                required
+                                            />
+                                        </div>
+                                        <div className="input-group">
+                                            <label>Description</label>
+                                            <textarea
+                                                placeholder="Brief description of the category..."
+                                                value={categoryData.description}
+                                                onChange={(e) => setCategoryData({...categoryData, description: e.target.value})}
+                                            />
+                                        </div>
+                                        <div className="form-actions">
+                                            <button type="button" className="btn-cancel" onClick={resetCategoryForm}>
+                                                Cancel
+                                            </button>
+                                            <button type="submit" className="btn-save">
+                                                {isEditing ? "Update" : "Save"}
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
                         )}
                     </div>
                 )}

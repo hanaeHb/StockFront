@@ -103,9 +103,13 @@ export default function Manager() {
 
                     <div className="nav-right">
 
-                        <div className="nav-avatar small">
-                            <FaBell/>
-                            <span className="badge-number">2</span>
+                        <div>
+                            <ul className="menu">
+                                <li className={activeSection === "bell" ? "active" : ""}
+                                    onClick={() => setActiveSection("bell")}>
+                                    <FaBell/>
+                                </li>
+                            </ul>
                         </div>
 
                         <div className="nav-avatar"
@@ -236,7 +240,9 @@ export default function Manager() {
                         <h3>Personal Information</h3>
 
                         <div className="profile-intro">
-                            The manager supervises inventory, products, and analytics. Responsibilities include monitoring stock levels, tracking performance, and coordinating with staff for efficient workflow.
+                            The manager supervises inventory, products, and analytics. Responsibilities include
+                            monitoring stock levels, tracking performance, and coordinating with staff for efficient
+                            workflow.
                         </div>
 
                         <div className="profile-avatar-section">
@@ -279,7 +285,7 @@ export default function Manager() {
                                     <FaUser size={90} className="profile-avatar-icon"/>
                                 )}
                             </div>
-                            <h2  className="upload-text">{profile?.prenom || ""} {profile?.nom || ""}</h2>
+                            <h2 className="upload-text">{profile?.prenom || ""} {profile?.nom || ""}</h2>
                         </div>
 
                         {/* Inputs row */}
@@ -296,14 +302,22 @@ export default function Manager() {
                             <div className="form-group"><label>Email</label><input type="email"
                                                                                    value={profile?.email || ""}
                                                                                    readOnly/></div>
-                            <div className="form-group"><label>Phone</label><input type="text"
-                                                                                   value={profile?.phone || ""}
-                                                                                   readOnly/></div>
+                            <div className="form-group"><label>Phone</label><input
+                                type="text"
+                                value={profile?.phone || ""}
+                                onChange={e => setProfile({...profile, phone: e.target.value})}
+                            /></div>
                         </div>
 
                         <div className="profile-info-two-columns">
-                            <div className="form-group"><label>CIN</label><input type="text" value={profile?.cin || ""} readOnly /></div>
-                            <div className="form-group"><label>Status</label><input type="text" value={profile?.status || ""} readOnly /></div>
+                            <div className="form-group"><label>CIN</label><input
+                                type="text"
+                                value={profile?.cin || ""}
+                                onChange={e => setProfile({...profile, cin: e.target.value})}
+                            /></div>
+                            <div className="form-group"><label>Status</label><input type="text"
+                                                                                    value={profile?.status || ""}
+                                                                                    readOnly/></div>
                         </div>
 
                         <div className="profile-info-two-columns">
@@ -311,8 +325,41 @@ export default function Manager() {
                                                                                   value={profile?.metierRole || "Manager"}
                                                                                   readOnly/></div>
                             <div className="form-group"><label>Join Date</label><input type="text"
-                                                                                  value={profile?.createdAt || " "}
-                                                                                  readOnly/></div>
+                                                                                       value={profile?.createdAt || " "}
+                                                                                       readOnly/></div>
+                        </div>
+
+                        <div className="profile-actions">
+                            <button
+                                className="change-btn"
+                                onClick={async () => {
+                                    try {
+                                        const token = localStorage.getItem("token");
+
+                                        // hna ghi les fields editable
+                                        const updatedData = {
+                                            phone: profile?.phone,
+                                            cin: profile?.cin,
+                                        };
+
+                                        const res = await axios.put(
+                                            `http://localhost:8060/v1/user-profiles/me`,
+                                            updatedData,
+                                            {
+                                                headers: {Authorization: `Bearer ${token}`},
+                                            }
+                                        );
+
+                                        setProfile(res.data); // update local state
+                                        alert("Profile updated successfully ✅");
+                                    } catch (err) {
+                                        console.error("Error updating profile", err.response || err.message);
+                                        alert("Failed to update profile.");
+                                    }
+                                }}
+                            >
+                                Save Changes
+                            </button>
                         </div>
                     </div>
                 )}

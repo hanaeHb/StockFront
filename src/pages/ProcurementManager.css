@@ -210,6 +210,13 @@
     box-shadow: 0 0 5px rgba(79,172,254,0.5);
 }
 
+.profile-actions {
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-end;
+    width: 250px;
+}
+
 /* ========================= */
 /* FOURNISSEUR TABLE */
 /* ========================= */

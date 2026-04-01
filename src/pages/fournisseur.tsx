@@ -129,12 +129,17 @@ export default function Fournisseur() {
                     </a>
 
                     <div className="nav-right">
-                        <div className="nav-avatar small">
-                            <FaBell/>
-                            <span className="badge-number">2</span>
+                        <div>
+                            <ul className="menu">
+                                <li className={activeSection === "bell" ? "active" : ""}
+                                    onClick={() => setActiveSection("bell")}>
+                                    <FaBell/>
+                                </li>
+                            </ul>
                         </div>
 
-                        <div className="nav-avatar" onClick={() => setActiveSection("profile")} style={{cursor:"pointer"}}>
+                        <div className="nav-avatar" onClick={() => setActiveSection("profile")}
+                             style={{cursor: "pointer"}}>
                             {profile?.image ? <img
                                 src={profile.image.startsWith('http') ? profile.image : `http://localhost:5000${profile.image}`}
                                 alt="Profile"

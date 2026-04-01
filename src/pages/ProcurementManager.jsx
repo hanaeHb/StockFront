@@ -7,7 +7,7 @@ import {
     FaCog,
     FaUser,
     FaSignOutAlt,
-    FaBoxes
+    FaBoxes, FaUserTie
 } from "react-icons/fa";
 import { FiGrid } from "react-icons/fi";
 import axios from "axios";
@@ -16,7 +16,7 @@ export default function ProcurementManager() {
 
     const [activeSection, setActiveSection] = useState("dashboard");
     const [profile, setProfile] = useState(null);
-
+    const [notificationCount, setNotificationCount] = useState(0);
     useEffect(() => {
 
         const fetchProfile = async () => {
@@ -50,45 +50,73 @@ export default function ProcurementManager() {
 
     const [pendingFournisseurs, setPendingFournisseurs] = useState([]);
 
-    const updateNotificationStatus = async (id, status) => {
+    const updateNotificationStatus = async (notificationId, status, userId) => {
         try {
             const token = localStorage.getItem("token");
 
-            // API li katupdate status dyal notification
             await axios.put(
-                `http://localhost:5003/api/notifications/${id}/status`,
-                { status }, // "validated" ou "rejected"
+                `http://localhost:5003/api/notifications/${notificationId}/status`,
+                { status },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
 
-            alert(`Fournisseur ${status === "validated" ? "validé" : "refusé"} avec succès!`);
+            await axios.patch(
+                `http://localhost:8098/v1/users/${userId}/status`,
+                {
+                    active: status === "validated"
+                },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
 
-            // update frontend state: retire notification men pending list
-            setPendingFournisseurs(prev => prev.filter(f => f._id !== id));
+            alert("Status mis à jour ✅");
+
+            setPendingFournisseurs(prev => {
+                const newList = prev.filter(f => f._id !== notificationId);
+                setNotificationCount(newList.length);
+                return newList;
+            });
 
         } catch (err) {
-            console.error(`Erreur lors du ${status}`, err.response ? err.response.data : err.message);
-            alert(`Erreur lors du ${status} du fournisseur`);
+            console.error(err.response?.data || err.message);
+            alert("Erreur update fournisseur");
         }
     };
 
     const validateFournisseur = (id) => updateNotificationStatus(id, "validated");
     const rejectFournisseur = (id) => updateNotificationStatus(id, "rejected");
+    const [validatedFournisseurs, setValidatedFournisseurs] = useState([]);
     useEffect(() => {
-        const fetchPendingFournisseurs = async () => {
+        const fetchPending = async () => {
             try {
                 const token = localStorage.getItem("token");
                 const res = await axios.get("http://localhost:5003/api/notifications/pending", {
                     headers: { Authorization: `Bearer ${token}` }
                 });
-                console.log("Pending fournisseurs response:", res.data);
                 setPendingFournisseurs(res.data);
+                setNotificationCount(res.data.length);
             } catch (err) {
-                console.error("Erreur fetching pending fournisseurs", err.response ? err.response.data : err.message);
+                console.error("Erreur fetching pending fournisseurs", err);
             }
         };
 
-        fetchPendingFournisseurs();
+        const fetchValidated = async () => {
+            try {
+                const token = localStorage.getItem("token");
+                const res = await fetch("http://localhost:5003/api/notifications/validated", {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                if (!res.ok) throw new Error("Erreur fetch validated");
+                const data = await res.json();
+                const arrayData = Array.isArray(data) ? data : data.fournisseurs || [];
+                setValidatedFournisseurs(arrayData);
+            } catch (err) {
+                console.error("Error fetching validated fournisseurs:", err);
+                setValidatedFournisseurs([]);
+            }
+        };
+
+        fetchPending();
+        fetchValidated();
     }, []);
 
 
@@ -102,10 +130,10 @@ export default function ProcurementManager() {
             const token = localStorage.getItem("token");
 
             const response = await axios.get(
-                `http://localhost:8098/v1/users/download/${cvFile}`, // path men Security service
+                `http://localhost:8098/v1/users/download/${cvFile}`,
                 {
                     headers: { Authorization: `Bearer ${token}` },
-                    responseType: "blob" // important bach ydownload raw file
+                    responseType: "blob"
                 }
             );
 
@@ -139,6 +167,10 @@ export default function ProcurementManager() {
                         onClick={() => setActiveSection("products")}>
                         <FaBoxes/>
                     </li>
+                    <li className={activeSection === "fournisseurs" ? "active" : ""}
+                        onClick={() => setActiveSection("fournisseurs")}>
+                        <FaUserTie/>
+                    </li>
 
                     <li className={activeSection === "analytics" ? "active" : ""}
                         onClick={() => setActiveSection("analytics")}>
@@ -151,7 +183,7 @@ export default function ProcurementManager() {
 
                     <li className={activeSection === "settings" ? "active" : ""}
                         onClick={() => setActiveSection("settings")}>
-                        <FaCog/>
+                    <FaCog/>
                     </li>
 
                     <li onClick={() => {
@@ -178,18 +210,20 @@ export default function ProcurementManager() {
 
                     <div className="nav-right">
 
-                        <div className="nav-avatar small">
-                            <li className={activeSection === "bell" ? "active" : ""}
-                                onClick={() => setActiveSection("bell")}>
-                                <FaBell/>
-                            </li>
-                            <span className="badge-number">2</span>
+                        <div>
+                            <ul className="menu">
+                                <li className={activeSection === "bell" ? "active" : ""}
+                                    onClick={() => setActiveSection("bell")}>
+                                    <FaBell/>
+                                </li>
+                            </ul>
+                            {notificationCount > 0 && <span className="badge-number">{notificationCount}</span>}
                         </div>
 
                         <div className="nav-avatar"
                              onClick={() => setActiveSection("profile")}
                              style={{cursor: "pointer"}}>
-                        {profile?.image ? (
+                            {profile?.image ? (
                                 <img src={profile.image} alt="avatar" className="nav-avatar-img"/>
                             ) : (
                                 <FaUser size={24}/>
@@ -314,7 +348,10 @@ export default function ProcurementManager() {
                         <h3>Personal Information</h3>
 
                         <div className="profile-intro">
-                            The Procurement Manager supervises inventory, products, and analytics. Responsibilities include monitoring stock levels, tracking performance, and coordinating with staff for efficient workflow.                        </div>
+                            The Procurement Manager supervises inventory, products, and analytics. Responsibilities
+                            include monitoring stock levels, tracking performance, and coordinating with staff for
+                            efficient workflow.
+                        </div>
 
                         <div className="profile-avatar-section">
                             <div className="avatar-container">
@@ -356,7 +393,7 @@ export default function ProcurementManager() {
                                     <FaUser size={90} className="profile-avatar-icon"/>
                                 )}
                             </div>
-                            <h2  className="upload-text">{profile?.prenom || ""} {profile?.nom || ""}</h2>
+                            <h2 className="upload-text">{profile?.prenom || ""} {profile?.nom || ""}</h2>
                         </div>
 
                         {/* Inputs row */}
@@ -373,14 +410,23 @@ export default function ProcurementManager() {
                             <div className="form-group"><label>Email</label><input type="email"
                                                                                    value={profile?.email || ""}
                                                                                    readOnly/></div>
-                            <div className="form-group"><label>Phone</label><input type="text"
-                                                                                   value={profile?.phone || ""}
-                                                                                   readOnly/></div>
+                            <div className="form-group"><label>Phone</label><input
+                                type="text"
+                                value={profile?.phone || ""}
+                                onChange={e => setProfile({...profile, phone: e.target.value})}
+                            /></div>
                         </div>
 
                         <div className="profile-info-two-columns">
-                            <div className="form-group"><label>CIN</label><input type="text" value={profile?.cin || ""} readOnly /></div>
-                            <div className="form-group"><label>Status</label><input type="text" value={profile?.status || ""} readOnly /></div>
+                            <div className="form-group"><label>CIN</label><input
+                                type="text"
+                                value={profile?.cin || ""}
+                                onChange={e => setProfile({...profile, cin: e.target.value})}
+                            />
+                            </div>
+                            <div className="form-group"><label>Status</label><input type="text"
+                                                                                    value={profile?.status || ""}
+                                                                                    readOnly/></div>
                         </div>
 
                         <div className="profile-info-two-columns">
@@ -391,25 +437,58 @@ export default function ProcurementManager() {
                                                                                        value={profile?.createdAt || " "}
                                                                                        readOnly/></div>
                         </div>
+
+                        <div className="profile-actions">
+                            <button
+                                className="change-btn"
+                                onClick={async () => {
+                                    try {
+                                        const token = localStorage.getItem("token");
+
+                                        // hna ghi les fields editable
+                                        const updatedData = {
+                                            phone: profile?.phone,
+                                            cin: profile?.cin,
+                                        };
+
+                                        const res = await axios.put(
+                                            `http://localhost:8060/v1/user-profiles/me`,
+                                            updatedData,
+                                            {
+                                                headers: {Authorization: `Bearer ${token}`},
+                                            }
+                                        );
+
+                                        setProfile(res.data); // update local state
+                                        alert("Profile updated successfully ✅");
+                                    } catch (err) {
+                                        console.error("Error updating profile", err.response || err.message);
+                                        alert("Failed to update profile.");
+                                    }
+                                }}
+                            >
+                                Save Changes
+                            </button>
+                        </div>
                     </div>
                 )}
 
-                {activeSection === "bell" && (
+                {activeSection === "fournisseurs" && (
                     <>
                         <header className="header">
-                            <h1>Fournisseurs en attente</h1>
+                            <h1>Pending Suppliers</h1>
                             <p className="subtitle">
-                                Validez ou refusez les nouveaux fournisseurs.
+                                Approve or reject the new suppliers.
                             </p>
                         </header>
 
                         <section className="panel large">
 
                             {pendingFournisseurs.length === 0 ? (
-                                <p className="empty-msg">Aucun fournisseur en attente.</p>
+                                <p className="empty-msg">No suppliers waiting.</p>
                             ) : (
 
-                                <table className="fournisseur-table">
+                                <table className="stock-table users-table">
 
                                     <thead>
                                     <tr>
@@ -447,16 +526,22 @@ export default function ProcurementManager() {
 
                                                 <button
                                                     className="btn-validate"
-                                                    onClick={() => validateFournisseur(f._id)}
+                                                    onClick={() =>
+                                                        updateNotificationStatus(
+                                                            f._id,
+                                                            "validated",
+                                                            f.userId
+                                                        )
+                                                    }
                                                 >
-                                                    Valider
+                                                    Validate
                                                 </button>
 
                                                 <button
                                                     className="btn-reject"
                                                     onClick={() => rejectFournisseur(f._id)}
                                                 >
-                                                    Refuser
+                                                    Refuse
                                                 </button>
 
                                             </td>
@@ -465,6 +550,39 @@ export default function ProcurementManager() {
                                     ))}
                                     </tbody>
 
+                                </table>
+                            )}
+
+                        </section>
+
+                        <header className="header">
+                            <h1>Pending Suppliers</h1>
+                            <p className="subtitle">
+                                Approve or reject the new suppliers.
+                            </p>
+                        </header>
+
+                        <section className="panel large">
+
+                            {validatedFournisseurs.length === 0 ? <p>No validated suppliers</p> : (
+                                <table className="stock-table users-table">
+                                    <thead>
+                                    <tr>
+                                        <th>Name</th><th>Email</th><th>Phone</th><th>CIN</th><th>Date</th><th>CV</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {validatedFournisseurs.map(f => (
+                                        <tr key={f._id || f.id}>
+                                            <td>{f.firstName} {f.lastName}</td>
+                                            <td>{f.email}</td>
+                                            <td>{f.phone}</td>
+                                            <td>{f.cin}</td>
+                                            <td>{new Date(f.dateAlerte).toLocaleDateString()}</td>
+                                            <td>{f.cvFile ? <button onClick={() => downloadCV(f.cvFile.replace(/^\/?uploads\/cv\//, ''))}>Download CV</button> : "N/A"}</td>
+                                        </tr>
+                                    ))}
+                                    </tbody>
                                 </table>
                             )}
 

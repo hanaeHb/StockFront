@@ -6,8 +6,8 @@ import {
     FaUser,
     FaEnvelope,
     FaLock,
-    FaGoogle,
-    FaFacebookF
+    FaPhone,
+    FaIdCard
 } from "react-icons/fa";
 import {useNavigate} from "react-router-dom";
 
@@ -134,7 +134,6 @@ export default function SignIn() {
                                 onChange={handleChange}
                             />
                         </div>
-
                         <div className="row">
                             <div className="input-group">
                                 <FaUser className="input-icon"/>
@@ -153,7 +152,7 @@ export default function SignIn() {
                                 />
                             </div>
                             <div className="input-group">
-                                <FaUser className="input-icon"/>
+                                <FaPhone className="input-icon"/>
                                 <input placeholder="Phone..."
                                        name="phone"
                                        value={formData.phone}
@@ -161,34 +160,48 @@ export default function SignIn() {
                                 />
                             </div>
                             <div className="input-group">
-                                <FaUser className="input-icon"/>
+                                <FaIdCard className="input-icon"/>
                                 <input placeholder="Cin..."
                                        name="cin"
                                        value={formData.cin}
                                        onChange={handleChange}
                                 />
                             </div>
-                            <div className="input-group">
-                                <FaUser className="input-icon"/>
+                        </div>
+
+                        <div className="upload-box">
+                            <label className="upload-label">
                                 <input
                                     type="file"
                                     name="cv"
-                                    onChange={(e) => setFormData({...formData, cv: e.target.files[0]})}
+                                    onChange={(e) =>
+                                        setFormData({...formData, cv: e.target.files[0]})
+                                    }
                                 />
-                            </div>
+
+                                <div className="upload-content">
+                                    <span className="upload-icon">📄</span>
+
+                                    <p>
+                                        {formData.cv
+                                            ? formData.cv.name
+                                            : "Upload your CV"}
+                                    </p>
+
+                                    <small>PDF, DOCX — Max 5MB</small>
+                                </div>
+                            </label>
                         </div>
 
 
-                        <small className="hint">Must be at least 8 characters.</small>
-
                         <button className="signup-btn" onClick={handleSubmit} disabled={loading}>
-                        {loading ? "Signing Up..." : "Sign Up"}
+                            {loading ? "Signing Up..." : "Sign Up"}
                         </button>
 
                         <div className="or">OR SIGN UP WITH</div>
 
                         <div className="socials">
-                        <button className="social-btn">Google</button>
+                            <button className="social-btn">Google</button>
                             <button className="social-btn">Facebook</button>
                         </div>
 

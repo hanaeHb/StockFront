@@ -12,6 +12,8 @@ import {
 } from "react-icons/fa";
 import { FiGrid } from "react-icons/fi";
 import axios from "axios";
+import CreateProduitForm from "./CreateProduitForm";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface Profile {
     userId?: number;
@@ -83,6 +85,26 @@ export default function InventoryManager() {
         }
     };
 
+    const [products, setProducts] = useState<any[]>([]);
+    const [searchTerm, setSearchTerm] = useState("");
+
+    const fetchProducts = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            const res = await axios.get("http://localhost:8062/v1/produits", {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setProducts(res.data);
+        } catch (err) {
+            console.error("Error fetching products", err);
+        }
+    };
+
+    useEffect(() => {
+        if (activeSection === "products") {
+            fetchProducts();
+        }
+    }, [activeSection]);
     return (
         <div className="manager-container">
 
@@ -133,9 +155,13 @@ export default function InventoryManager() {
                     </a>
 
                     <div className="nav-right">
-                        <div className="nav-avatar small">
-                            <FaBell/>
-                            <span className="badge-number">2</span>
+                        <div>
+                            <ul className="menu">
+                                <li className={activeSection === "bell" ? "active" : ""}
+                                    onClick={() => setActiveSection("bell")}>
+                                    <FaBell/>
+                                </li>
+                            </ul>
                         </div>
 
                         <div className="nav-avatar"
@@ -184,35 +210,112 @@ export default function InventoryManager() {
                     </>
                 )}
 
-                {/* Products */}
+                {/* Products Section */}
                 {activeSection === "products" && (
-                    <div className="panel large">
-                        <h3>Products List</h3>
-                        <table className="stock-table">
-                            <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Category</th>
-                                <th>Stock</th>
-                                <th>Status</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            <tr>
-                                <td>Laptop Dell</td>
-                                <td>Electronics</td>
-                                <td>45</td>
-                                <td>Available</td>
-                            </tr>
-                            <tr>
-                                <td>Keyboard</td>
-                                <td>Accessories</td>
-                                <td>12</td>
-                                <td>Low</td>
-                            </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="products-hub"
+                    >
+                        <div className="hub-header">
+                            <div>
+                                <h2 className="section-title">Inventory Repository</h2>
+                                <p className="section-subtitle">Manage, track and deploy new product assets.</p>
+                            </div>
+
+                            <button
+                                className="btn-add-product-main"
+                                onClick={() => setActiveSection("create-product")}
+                            >
+                                <FaBoxes style={{marginRight: '10px'}}/>
+                                Deploy New Asset
+                            </button>
+                        </div>
+
+                        <div className="panel large glass-panel">
+                            <div className="panel-header-inline">
+                                <h3>Active Inventory</h3>
+                                <div className="table-search">
+                                    <input
+                                        type="text"
+                                        placeholder="Search by SKU or Name..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                            <table className="stock-table">
+                                <thead>
+                                <tr>
+                                    <th>Product Info</th>
+                                    <th>Category</th>
+                                    <th>Stock Level</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {products
+                                    .filter(p => p.nom.toLowerCase().includes(searchTerm.toLowerCase()) || p.sku.toLowerCase().includes(searchTerm.toLowerCase()))
+                                    .map((product) => (
+                                        <tr key={product.id}>
+                                            <td>
+                                                <div className="td-info"
+                                                     style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
+                                                    {product.image && <img src={product.image} alt="p"/>}
+                                                    <div>
+                                                        <strong>{product.nom}</strong>
+                                                        <span>SKU: {product.sku}</span>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span className="badge-cat">
+                                                    {product.category ? product.category.nom : (product.categorie || "No Category")}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div className="stock-progress">
+                                                    <span>{product.quantiteDisponible ?? 0} units</span>
+
+                                                    <div className="mini-bar">
+                                                        <div style={{
+                                                            width: product.quantiteDisponible > (product.seuilCritique || 5) ? '80%' : '20%',
+                                                            backgroundColor: product.quantiteDisponible > (product.seuilCritique || 5) ? '#4facfe' : '#ef4444'
+                                                        }}></div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span
+                                                    className={`status-pill ${product.active ? 'available' : 'out-of-stock'}`}>
+                                                    {product.active ? "Active" : "Disabled"}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <button className="btn-edit-small">Edit</button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </motion.div>
+                )}
+
+                {activeSection === "create-product" && (
+                    <motion.div
+                        initial={{opacity: 0, scale: 0.9}}
+                        animate={{opacity: 1, scale: 1}}
+                        className="create-product-wrapper"
+                    >
+                        <div className="back-nav">
+                            <button onClick={() => setActiveSection("products")} className="btn-back">
+                                ← Back to Inventory
+                            </button>
+                        </div>
+                        <CreateProduitForm/>
+                    </motion.div>
                 )}
 
                 {/* Analytics */}
@@ -223,13 +326,13 @@ export default function InventoryManager() {
                             <li>
                                 <span>Stock Growth</span>
                                 <div className="bar">
-                                    <div style={{width:"75%"}}/>
+                                    <div style={{width: "75%"}}/>
                                 </div>
                             </li>
                             <li>
                                 <span>Sales Performance</span>
                                 <div className="bar">
-                                    <div style={{width:"60%"}}/>
+                                    <div style={{width: "60%"}}/>
                                 </div>
                             </li>
                         </ul>
@@ -250,7 +353,10 @@ export default function InventoryManager() {
                         <h3>Personal Information</h3>
 
                         <div className="profile-intro">
-                            The Inventory Manager oversees stock management, product organization, and warehouse operations. Responsibilities include maintaining accurate inventory levels, analyzing stock trends, and coordinating with the team for smooth operational workflow.                         </div>
+                            The Inventory Manager oversees stock management, product organization, and warehouse
+                            operations. Responsibilities include maintaining accurate inventory levels, analyzing stock
+                            trends, and coordinating with the team for smooth operational workflow.
+                        </div>
 
                         <div className="profile-avatar-section">
                             <div className="avatar-container">
@@ -271,23 +377,75 @@ export default function InventoryManager() {
 
                         {/* Info */}
                         <div className="profile-info-two-columns">
-                            <div className="form-group"><label>First Name</label><input type="text" value={profile?.nom || ""} readOnly/></div>
-                            <div className="form-group"><label>Last Name</label><input type="text" value={profile?.prenom || ""} readOnly/></div>
+                            <div className="form-group"><label>First Name</label><input type="text"
+                                                                                        value={profile?.nom || ""}
+                                                                                        readOnly/></div>
+                            <div className="form-group"><label>Last Name</label><input type="text"
+                                                                                       value={profile?.prenom || ""}
+                                                                                       readOnly/></div>
                         </div>
 
                         <div className="profile-info-two-columns">
-                            <div className="form-group"><label>Email</label><input type="email" value={profile?.email || ""} readOnly/></div>
-                            <div className="form-group"><label>Phone</label><input type="text" value={profile?.phone || ""} readOnly/></div>
+                            <div className="form-group"><label>Email</label><input type="email"
+                                                                                   value={profile?.email || ""}
+                                                                                   readOnly/></div>
+                            <div className="form-group"><label>Phone</label><input
+                                type="text"
+                                value={profile?.phone || ""}
+                                onChange={e => setProfile({...profile, phone: e.target.value})}
+                            /></div>
                         </div>
 
                         <div className="profile-info-two-columns">
-                            <div className="form-group"><label>CIN</label><input type="text" value={profile?.cin || ""} readOnly/></div>
-                            <div className="form-group"><label>Status</label><input type="text" value={profile?.status || ""} readOnly/></div>
+                            <div className="form-group"><label>CIN</label><input
+                                type="text"
+                                value={profile?.cin || ""}
+                                onChange={e => setProfile({...profile, cin: e.target.value})}
+                            /></div>
+                            <div className="form-group"><label>Status</label><input type="text"
+                                                                                    value={profile?.status || ""}
+                                                                                    readOnly/></div>
                         </div>
 
                         <div className="profile-info-two-columns">
-                            <div className="form-group"><label>Role</label><input type="text" value={profile?.metierRole || "Procurement Manager"} readOnly/></div>
-                            <div className="form-group"><label>Join Date</label><input type="text" value={profile?.createdAt || ""} readOnly/></div>
+                            <div className="form-group"><label>Role</label><input type="text"
+                                                                                  value={profile?.metierRole || "Inventory Manager"}
+                                                                                  readOnly/></div>
+                            <div className="form-group"><label>Join Date</label><input type="text"
+                                                                                       value={profile?.createdAt || ""}
+                                                                                       readOnly/></div>
+                        </div>
+
+                        <div className="profile-actions">
+                            <button
+                                className="change-btn"
+                                onClick={async () => {
+                                    try {
+                                        const token = localStorage.getItem("token");
+
+                                        const updatedData = {
+                                            phone: profile?.phone,
+                                            cin: profile?.cin,
+                                        };
+
+                                        const res = await axios.put(
+                                            `http://localhost:8060/v1/user-profiles/me`,
+                                            updatedData,
+                                            {
+                                                headers: {Authorization: `Bearer ${token}`},
+                                            }
+                                        );
+
+                                        setProfile(res.data);
+                                        alert("Profile updated successfully ✅");
+                                    } catch (err) {
+                                        console.error("Error updating profile");
+                                        alert("Failed to update profile.");
+                                    }
+                                }}
+                            >
+                                Save Changes
+                            </button>
                         </div>
 
                     </div>
