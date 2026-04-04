@@ -18,17 +18,22 @@ export default function Login() {
 
     const handleLogin = async () => {
         try {
-            const res = await axios.post("http://localhost:8098/v1/users/login", {
+            const res = await axios.post("http://localhost:8888/security-stock/v1/users/login", {
                 email: email.trim(),
                 password: password
             });
 
-            const data = res.data;
-            console.log("Login response:", data);
-            localStorage.setItem("token", data.accessToken);
+            console.log("Response Data:", res.data);
+            if (!res.data.accessToken) {
+                throw new Error("No access token received");
+            }
 
-            const decoded = jwtDecode(data.accessToken);
-            console.log("DECODED:", decoded);
+            const token = res.data.accessToken;
+            localStorage.setItem("token", token);
+            const decoded = jwtDecode(token);
+
+            console.log("Decoded Token:", decoded);
+            const userRoles = decoded.roles || [];
 
             if (decoded.roles.includes("ADMIN")) {
                 alert("Login successful as ADMIN!");
@@ -55,8 +60,12 @@ export default function Login() {
             }
 
         } catch (err) {
-            console.error(err);
-            alert("Error during login");
+            console.error("Login Full Error:", err);
+            if (err.response) {
+                console.error("Status:", err.response.status);
+                console.error("Data:", err.response.data);
+            }
+            alert("Login failed! Check console for details.");
         }
     };
     return (

@@ -39,7 +39,7 @@ export default function Fournisseur() {
                 const token = localStorage.getItem("token");
 
                 const res = await axios.get<FournisseurResponse>(
-                    "http://localhost:5000/api/fournisseurs/me",
+                    "http://localhost:8888/fournisseur-service/api/fournisseurs/me",
                     {
                         headers: { Authorization: `Bearer ${token}` }
                     }
@@ -67,7 +67,7 @@ export default function Fournisseur() {
 
         try {
             const res = await axios.put(
-                "http://localhost:5000/api/fournisseurs/me",
+                "http://localhost:8888/fournisseur-service/api/fournisseurs/me",
                 formData,
                 {
                     headers: {
@@ -80,7 +80,7 @@ export default function Fournisseur() {
             // Update profile with full URL
             const updatedProfile = res.data.fournisseur;
             if (updatedProfile.image && !updatedProfile.image.startsWith("http")) {
-                updatedProfile.image = `http://localhost:5000${updatedProfile.image}`;
+                updatedProfile.image = `http://localhost:8888/fournisseur-service${updatedProfile.image}`;
             }
             setProfile(updatedProfile);
 
@@ -141,7 +141,7 @@ export default function Fournisseur() {
                         <div className="nav-avatar" onClick={() => setActiveSection("profile")}
                              style={{cursor: "pointer"}}>
                             {profile?.image ? <img
-                                src={profile.image.startsWith('http') ? profile.image : `http://localhost:5000${profile.image}`}
+                                src={profile.image.startsWith('http') ? profile.image : `http://localhost:8888/fournisseur-service${profile.image}`}
                                 alt="Profile"
                                 className="nav-avatar-img"
                             /> : <FaUser size={24}/>}
@@ -222,7 +222,7 @@ export default function Fournisseur() {
 
                                 {profile.image ? (
                                     <img
-                                        src={profile.image.startsWith('http') ? profile.image : `http://localhost:5000${profile.image}`}
+                                        src={profile.image.startsWith('http') ? profile.image : `http://localhost:8888/fournisseur-service${profile.image}`}
                                         alt="Profile"
                                         className="profile-avatar-img"
                                     />

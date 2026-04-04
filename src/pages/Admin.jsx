@@ -38,7 +38,7 @@ export default function Admin() {
     const dropdownRef = useRef(null);
     const [profile, setProfile] = useState(null);
     // ===================== Profile States =====================
-    const API_URL = "http://localhost:8098/v1/users";
+    const API_URL = "http://localhost:8888/security-stock/v1/users";
     const token = localStorage.getItem("token");
     const adminId = 1; // replace with dynamic ID if needed
     const [adminData, setAdminData] = useState(null);
@@ -97,7 +97,7 @@ export default function Admin() {
             try {
                 const token = localStorage.getItem("token");
                 const res = await axios.get(
-                    "http://localhost:8060/v1/user-profiles/me",
+                    "http://localhost:8888/users-service/v1/user-profiles/me",
                     {
                         headers: { Authorization: `Bearer ${token}` }
                     }
@@ -120,7 +120,7 @@ export default function Admin() {
             phone: adminData.phone,
             cin: adminData.cin,
         };
-        fetch(`http://localhost:8060/v1/user-profiles/me`, {
+        fetch(`http://localhost:8888/users-service/v1/user-profiles/me`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
@@ -141,7 +141,7 @@ export default function Admin() {
 
     const fetchUsers = async () => {
         try {
-            const res = await fetch("http://localhost:8098/v1/users", {
+            const res = await fetch("http://localhost:8888/security-stock/v1/users", {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (!res.ok) throw new Error(`Erreur ${res.status}`);
@@ -169,7 +169,7 @@ export default function Admin() {
         }
 
         try {
-            const userRes = await fetch("http://localhost:8098/v1/users/create", {
+            const userRes = await fetch("http://localhost:8888/security-stock/v1/users/create", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -252,7 +252,7 @@ export default function Admin() {
         if (!window.confirm("Are you sure you want to delete this user?")) return;
 
         try {
-            const res = await fetch(`http://localhost:8098/v1/users/${id}`, {
+            const res = await fetch(`http://localhost:8888/security-stock/v1/users/${id}`, {
                 method: "DELETE",
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -268,7 +268,7 @@ export default function Admin() {
     }
     const handleToggleStatus = async (id, currentStatus) => {
         try {
-            await fetch(`http://localhost:8098/v1/users/${id}/status`, {
+            await fetch(`http://localhost:8888/security-stock/v1/users/${id}/status`, {
                 method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",
@@ -293,7 +293,7 @@ export default function Admin() {
     const fetchPendingFournisseurs = async () => {
         try {
             const res = await fetch(
-                "http://localhost:5003/api/notifications/pending",
+                "http://localhost:8888/notification-service/api/notifications/pending",
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             if (!res.ok) throw new Error("Erreur fetch pending");
@@ -308,7 +308,7 @@ export default function Admin() {
     const fetchValidatedFournisseurs = async () => {
         try {
             const res = await fetch(
-                "http://localhost:5003/api/notifications/validated",
+                "http://localhost:8888/notification-service/api/notifications/validated",
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             if (!res.ok) throw new Error("Erreur fetch validated");
@@ -316,7 +316,7 @@ export default function Admin() {
             const fournisseursArray = Array.isArray(fournisseurs5003) ? fournisseurs5003 : fournisseurs5003.fournisseurs || [];
 
             const resUsers = await fetch(
-                "http://localhost:8098/v1/users",
+                "http://localhost:8888/security-stock/v1/users",
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             if (!resUsers.ok) throw new Error("Erreur fetch users");
@@ -344,7 +344,7 @@ export default function Admin() {
             const token = localStorage.getItem("token");
 
             const response = await axios.get(
-                `http://localhost:8098/v1/users/download/${cvFile}`,
+                `http://localhost:8888/security-stock/v1/users/download/${cvFile}`,
                 {
                     headers: { Authorization: `Bearer ${token}` },
                     responseType: "blob"
@@ -381,7 +381,7 @@ export default function Admin() {
     const fetchCategories = async () => {
         try {
             const token = localStorage.getItem("token");
-            const res = await axios.get("http://localhost:8062/v1/categories", {
+            const res = await axios.get("http://localhost:8888/produit-stock/v1/categories", {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setCategories(res.data);
@@ -395,7 +395,7 @@ export default function Admin() {
         e.preventDefault();
         try {
             const token = localStorage.getItem("token");
-            await axios.post("http://localhost:8062/v1/categories", categoryData, {
+            await axios.post("http://localhost:8888/produit-stock/v1/categories", categoryData, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             alert("Category created! ✅");
@@ -420,7 +420,7 @@ export default function Admin() {
     const updateCategory = async (e) => {
         e.preventDefault();
         try {
-            await axios.put(`http://localhost:8062/v1/categories/${currentCategoryId}`, categoryData, {
+            await axios.put(`http://localhost:8888/produit-stock/v1/categories/${currentCategoryId}`, categoryData, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             alert("Catégorie mise à jour ! ✅");
@@ -440,7 +440,7 @@ export default function Admin() {
     const deleteCategory = async (id) => {
         if (!window.confirm("Voulez-vous supprimer cette catégorie ?")) return;
         try {
-            await axios.delete(`http://localhost:8062/v1/categories/${id}`, {
+            await axios.delete(`http://localhost:8888/produit-stock/v1/categories/${id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             fetchCategories();
@@ -461,7 +461,7 @@ export default function Admin() {
     const fetchProducts = async () => {
         try {
             const token = localStorage.getItem("token");
-            const res = await axios.get("http://localhost:8062/v1/produits", {
+            const res = await axios.get("http://localhost:8888/produit-stock/v1/produits", {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setProducts(res.data);
@@ -780,7 +780,7 @@ export default function Admin() {
                                                         checked={f.active}
                                                         onChange={async () => {
                                                             try {
-                                                                const user = await fetch(`http://localhost:8098/v1/users/${f.userId}/status`, {
+                                                                const user = await fetch(`http://localhost:8888/security-stock/v1/users/${f.userId}/status`, {
                                                                     method: "PATCH",
                                                                     headers: {
                                                                         "Content-Type": "application/json",

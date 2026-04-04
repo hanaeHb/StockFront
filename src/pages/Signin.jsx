@@ -49,7 +49,7 @@ export default function SignIn() {
             }
 
             const res = await axios.post(
-                "http://localhost:8098/v1/users/register",
+                "http://localhost:8888/security-stock/v1/users/register",
                 data,
                 { headers: { "Content-Type": "multipart/form-data" } }
             );

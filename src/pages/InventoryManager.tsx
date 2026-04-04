@@ -14,7 +14,6 @@ import { FiGrid } from "react-icons/fi";
 import axios from "axios";
 import CreateProduitForm from "./CreateProduitForm";
 import { motion, AnimatePresence } from "framer-motion";
-
 interface Profile {
     userId?: number;
     nom?: string;
@@ -38,7 +37,7 @@ export default function InventoryManager() {
                 const token = localStorage.getItem("token");
 
                 const res = await axios.get<Profile>(
-                    "http://localhost:8060/v1/user-profiles/me",
+                    "http://localhost:8888/users-service/v1/user-profiles/me",
                     {
                         headers: {
                             Authorization: `Bearer ${token}`
@@ -68,7 +67,7 @@ export default function InventoryManager() {
                 try {
                     const token = localStorage.getItem("token");
                     await axios.put(
-                        `http://localhost:8060/v1/user-profiles/me`,
+                        `http://localhost:8888/users-service/v1/user-profiles/me`,
                         { image: imageBase64 },
                         {
                             headers: {
@@ -88,10 +87,13 @@ export default function InventoryManager() {
     const [products, setProducts] = useState<any[]>([]);
     const [searchTerm, setSearchTerm] = useState("");
 
+    const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
+    const [movementType, setMovementType] = useState<"ENTREE" | "SORTIE" | null>(null);
+    const [movementQty, setMovementQty] = useState<number>(0);
     const fetchProducts = async () => {
         try {
             const token = localStorage.getItem("token");
-            const res = await axios.get("http://localhost:8062/v1/produits", {
+            const res = await axios.get("http://localhost:8888/produit-stock/v1/produits", {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setProducts(res.data);
@@ -103,6 +105,71 @@ export default function InventoryManager() {
     useEffect(() => {
         if (activeSection === "products") {
             fetchProducts();
+        }
+    }, [activeSection]);
+
+    const handleMovementSubmit = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            const payload = {
+                produitId: selectedProduct.id,
+                type: movementType,
+                quantite: movementQty,
+                referenceDocument: "MANUAL_ENTRY",
+
+            };
+
+            await axios.post("http://localhost:8888/produit-stock/v1/mouvements", payload, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            alert("Mouvement enregistré avec succès!");
+            setSelectedProduct(null);
+            setMovementQty(0);
+            fetchProducts();
+        } catch (err: any) {
+            alert(err.response?.data?.message || "Erreur lors du mouvement");
+        }
+    };
+    const [notifications, setNotifications] = useState<any[]>([]);
+    const [unreadCount, setUnreadCount] = useState(0);
+
+    const fetchNotifications = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            const res = await axios.get("http://localhost:8888/notification-service/api/notifications/stock-alerts", {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            const stockData = res.data || [];
+            setNotifications(stockData);
+            const unread = stockData.filter((n: any) => n.statut === "NON_LUE").length;
+            setUnreadCount(unread);
+
+        } catch (err) {
+            console.error("Error fetching stock alerts", err);
+        }
+    };
+    const handleMarkAsRead = async (id: string) => {
+        try {
+            const token = localStorage.getItem("token");
+            await axios.put(
+                `http://localhost:8888/notification-service/api/notifications/${id}/mark-as-read`,
+                {},
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            setNotifications(prev => prev.filter(n => n._id !== id));
+            setUnreadCount(prev => Math.max(0, prev - 1));
+
+            console.log("Notification marked as read! ✅");
+
+        } catch (err: any) {
+            console.error("Error marking as read:", err.response?.data || err.message);
+        }
+    };
+    useEffect(() => {
+        if (activeSection === "bell") {
+            fetchNotifications();
         }
     }, [activeSection]);
     return (
@@ -210,6 +277,75 @@ export default function InventoryManager() {
                     </>
                 )}
 
+                {activeSection === "bell" && (
+                    <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="notifications-hub"
+                    >
+                        <div className="hub-header">
+                            <h2 className="section-title">Notification Center</h2>
+                            <p className="section-subtitle">Manage your inventory alerts and system communications.</p>
+                        </div>
+
+                        <div className="notif-sections-container">
+
+                            {/* --- COLUMN 1: STOCK ALERTS --- */}
+                            <section className="notif-group glass-panel">
+                                <div className="group-header">
+                                    <FaBoxes className="icon-stock" style={{ color: '#ef4444' }} />
+                                    <h3>Critical Stock Alerts</h3>
+                                    <span className="badge-count" style={{ background: '#ef4444' }}>
+                        {notifications.length}
+                    </span>
+                                </div>
+
+                                <div className="notif-list">
+                                    {notifications.length > 0 ? (
+                                        notifications.map(notif => (
+                                            <div key={notif._id} className="notif-item critical">
+                                                <div className="notif-content">
+                                                    <p>{notif.message}</p>
+                                                    <span className="notif-time">
+                                        {new Date(notif.dateAlerte).toLocaleString('en-US')}
+                                    </span>
+                                                </div>
+                                                {notif.statut === "NON_LUE" && (
+                                                    <button
+                                                        className="btn-done"
+                                                        onClick={() => handleMarkAsRead(notif._id)}
+                                                        title="Mark as Resolved"
+                                                    >
+                                                        ✓
+                                                    </button>
+                                                )}
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="empty-msg">
+                                            <p>✅ All stock levels are currently above the threshold.</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </section>
+
+                            {/* --- COLUMN 2: SYSTEM MESSAGES --- */}
+                            <section className="notif-group glass-panel">
+                                <div className="group-header">
+                                    <FaBell className="icon-msg" style={{ color: '#4facfe' }} />
+                                    <h3>System & Supplier Messages</h3>
+                                    <span className="badge-count">0</span>
+                                </div>
+                                <div className="notif-list">
+                                    <p className="empty-msg" style={{fontSize: '13px', color: '#888'}}>
+                                        No new system messages.
+                                    </p>
+                                </div>
+                            </section>
+
+                        </div>
+                    </motion.div>
+                )}
                 {/* Products Section */}
                 {activeSection === "products" && (
                     <motion.div
@@ -252,6 +388,7 @@ export default function InventoryManager() {
                                     <th>Stock Level</th>
                                     <th>Status</th>
                                     <th>Actions</th>
+                                    <th>Edit Produtc</th>
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -292,6 +429,29 @@ export default function InventoryManager() {
                                                     {product.active ? "Active" : "Disabled"}
                                                 </span>
                                             </td>
+                                                <td>
+                                                    <div style={{display: 'flex', gap: '5px'}}>
+                                                        <button
+                                                            className="btn-action-in"
+                                                            onClick={() => {
+                                                                setSelectedProduct(product);
+                                                                setMovementType("ENTREE");
+                                                            }}
+                                                            title="Entrée de stock"
+                                                        > +
+                                                        </button>
+
+                                                        <button
+                                                            className="btn-action-out"
+                                                            onClick={() => {
+                                                                setSelectedProduct(product);
+                                                                setMovementType("SORTIE");
+                                                            }}
+                                                            title="Sortie de stock"
+                                                        > -
+                                                        </button>
+                                                    </div>
+                                                </td>
                                             <td>
                                                 <button className="btn-edit-small">Edit</button>
                                             </td>
@@ -309,7 +469,7 @@ export default function InventoryManager() {
                         animate={{opacity: 1, scale: 1}}
                         className="create-product-wrapper"
                     >
-                        <div className="back-nav">
+                    <div className="back-nav">
                             <button onClick={() => setActiveSection("products")} className="btn-back">
                                 ← Back to Inventory
                             </button>
@@ -317,6 +477,46 @@ export default function InventoryManager() {
                         <CreateProduitForm/>
                     </motion.div>
                 )}
+
+                <AnimatePresence>
+                    {selectedProduct && movementType && (
+                        <motion.div
+                            className="modal-overlay"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                        >
+                            <motion.div
+                                className="movement-modal glass-panel"
+                                initial={{ scale: 0.8 }}
+                                animate={{ scale: 1 }}
+                                exit={{ scale: 0.8 }}
+                            >
+                                <h3>{movementType === "ENTREE" ? "📥 Réception de Stock" : "📤 Sortie de Stock"}</h3>
+                                <p>Produit: <strong>{selectedProduct.nom}</strong></p>
+
+                                <div className="form-group">
+                                    <label>Quantité</label>
+                                    <input
+                                        type="number"
+                                        value={movementQty}
+                                        onChange={(e) => setMovementQty(parseInt(e.target.value) || 0)}
+                                        min="1"
+                                    />
+                                </div>
+
+                                <div className="modal-actions">
+                                    <button className="btn-cancel" onClick={() => {setSelectedProduct(null); setMovementQty(0);}}>
+                                        Cancel
+                                    </button>
+                                    <button className="btn-confirm" onClick={handleMovementSubmit}>
+                                        Confirm Movement
+                                    </button>
+                                </div>
+                            </motion.div>
+                        </motion.div>
+                        )}
+                </AnimatePresence>
 
                 {/* Analytics */}
                 {activeSection === "analytics" && (
@@ -429,7 +629,7 @@ export default function InventoryManager() {
                                         };
 
                                         const res = await axios.put(
-                                            `http://localhost:8060/v1/user-profiles/me`,
+                                            `http://localhost:8888/users-service/v1/user-profiles/me`,
                                             updatedData,
                                             {
                                                 headers: {Authorization: `Bearer ${token}`},

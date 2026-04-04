@@ -26,7 +26,7 @@ export default function ProcurementManager() {
                 const token = localStorage.getItem("token");
 
                 const res = await axios.get(
-                    "http://localhost:8060/v1/user-profiles/me",
+                    "http://localhost:8888/users-service/v1/user-profiles/me",
                     {
                         headers: {
                             Authorization: `Bearer ${token}`
@@ -55,13 +55,13 @@ export default function ProcurementManager() {
             const token = localStorage.getItem("token");
 
             await axios.put(
-                `http://localhost:5003/api/notifications/${notificationId}/status`,
+                `http://localhost:8888/notification-service/api/notifications/${notificationId}/status`,
                 { status },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
 
             await axios.patch(
-                `http://localhost:8098/v1/users/${userId}/status`,
+                `http://localhost:8888/security-stock/v1/users/${userId}/status`,
                 {
                     active: status === "validated"
                 },
@@ -89,7 +89,7 @@ export default function ProcurementManager() {
         const fetchPending = async () => {
             try {
                 const token = localStorage.getItem("token");
-                const res = await axios.get("http://localhost:5003/api/notifications/pending", {
+                const res = await axios.get("http://localhost:8888/notification-service/api/notifications/pending", {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setPendingFournisseurs(res.data);
@@ -102,7 +102,7 @@ export default function ProcurementManager() {
         const fetchValidated = async () => {
             try {
                 const token = localStorage.getItem("token");
-                const res = await fetch("http://localhost:5003/api/notifications/validated", {
+                const res = await fetch("http://localhost:8888/notification-service/api/notifications/validated", {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 if (!res.ok) throw new Error("Erreur fetch validated");
@@ -130,7 +130,7 @@ export default function ProcurementManager() {
             const token = localStorage.getItem("token");
 
             const response = await axios.get(
-                `http://localhost:8098/v1/users/download/${cvFile}`,
+                `http://localhost:8888/security-stock/v1/users/download/${cvFile}`,
                 {
                     headers: { Authorization: `Bearer ${token}` },
                     responseType: "blob"
@@ -370,7 +370,7 @@ export default function ProcurementManager() {
                                                 try {
                                                     const token = localStorage.getItem("token");
                                                     await axios.put(
-                                                        `http://localhost:8060/v1/user-profiles/me`,
+                                                        `http://localhost:8888/users-service/v1/user-profiles/me`,
                                                         {image: imageBase64},
                                                         {
                                                             headers: {
@@ -452,7 +452,7 @@ export default function ProcurementManager() {
                                         };
 
                                         const res = await axios.put(
-                                            `http://localhost:8060/v1/user-profiles/me`,
+                                            `http://localhost:8888/users-service/v1/user-profiles/me`,
                                             updatedData,
                                             {
                                                 headers: {Authorization: `Bearer ${token}`},
