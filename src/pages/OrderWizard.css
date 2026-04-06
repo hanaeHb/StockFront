@@ -1,0 +1,220 @@
+
+.wizard-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.wizard-modal {
+    background: #ffffff;
+    width: 550px;
+    max-width: 90%;
+    border-radius: 24px;
+    padding: 2.5rem;
+    position: relative;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Close Button */
+.close-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: #f1f5f9;
+    border: none;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #64748b;
+    transition: 0.2s;
+}
+
+.close-btn:hover {
+    background: #fee2e2;
+    color: #ef4444;
+    transform: rotate(90deg);
+}
+
+/* Progress Stepper */
+.wizard-steps-nav {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 2.5rem;
+    position: relative;
+}
+
+.wizard-steps-nav span {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #cbd5e1;
+    position: relative;
+    z-index: 1;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    background: #f8fafc;
+    transition: 0.3s;
+}
+
+.wizard-steps-nav span.active {
+    color: #ffffff;
+    background:linear-gradient(135deg,#4facfe,#730d19);
+    box-shadow: 0 4px 12px rgba(79, 172, 254, 0.4);
+}
+
+.wizard-step-content {
+    animation: slideUp 0.4s ease-out;
+    text-align: center;
+}
+
+.wizard-step-content h3 {
+    color: #1e293b;
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+
+.info-box {
+    background: #f1f5f9;
+    padding: 1.5rem;
+    border-radius: 16px;
+    margin-bottom: 2rem;
+    text-align: left;
+}
+
+.info-box p {
+    margin: 0.5rem 0;
+    color: #475569;
+}
+
+
+.suppliers-list {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 2rem;
+    padding-right: 10px;
+}
+
+.supplier-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border: 2px solid #f1f5f9;
+    border-radius: 16px;
+    margin-bottom: 0.8rem;
+    cursor: pointer;
+    transition: 0.3s;
+    text-align: left;
+}
+
+.supplier-card:hover {
+    border-color: #4facfe;
+    background: #f0f9ff;
+}
+
+.supplier-card.selected {
+    border-color: #4facfe;
+    background: #e0f2fe;
+}
+
+.supplier-card svg {
+    font-size: 1.5rem;
+    color: #4facfe;
+}
+
+.supplier-card p {
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+}
+
+.supplier-card small {
+    color: #64748b;
+}
+
+
+.btn-prama, .btn-confa {
+    background:linear-gradient(135deg,#4facfe,#730d19);
+    color: white;
+    border: none;
+    padding: 0.8rem 2rem;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+    width: 100%;
+}
+
+.btn-prama:hover, .btn-confa:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(79, 172, 254, 0.3);
+}
+
+.btn-prama:disabled {
+    background: #cbd5e1;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.actions button:first-child {
+    background: #f1f5f9;
+    color: #64748b;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+
+.final-step {
+    padding: 2rem 0;
+}
+
+.final-step svg {
+    margin-bottom: 1rem;
+    animation: scaleIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes scaleIn {
+    from { transform: scale(0); }
+    to { transform: scale(1); }
+}
+
+.suppliers-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.suppliers-list::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}

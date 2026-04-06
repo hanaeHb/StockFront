@@ -8,10 +8,13 @@ import {
     FaUser,
     FaSignOutAlt,
     FaBoxes,
-    FaUserTie
+    FaUserTie,
+    FaTags,
+    FaTasks
 } from "react-icons/fa";
 import { FiGrid } from "react-icons/fi";
 import axios from "axios";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface Profile {
     userId?: number;
@@ -29,6 +32,65 @@ interface FournisseurResponse {
     message: string;
     fournisseur: Profile;
 }
+const OrderItemCard = ({ order }: { order: any }) => {
+    const [decision, setDecision] = useState<"pending" | "accepted" | "refused">("pending");
+    const [reason, setReason] = useState("");
+    const [price, setPrice] = useState("");
+
+    return (
+        <motion.div layout className={`order-stepper-card ${decision}`}>
+            <div className="order-main-info">
+
+                <h3>{order.pName || "Product Request"}</h3>
+                <p className="manager-note">Note: {order.message}</p>
+            </div>
+
+            <div className="decision-bar">
+                <button
+                    className={`btn-choice accept ${decision === 'accepted' ? 'active' : ''}`}
+                    onClick={() => setDecision("accepted")}
+                >
+                    ✔ I have the stock
+                </button>
+                <button
+                    className={`btn-choice refuse ${decision === 'refused' ? 'active' : ''}`}
+                    onClick={() => setDecision("refused")}
+                >
+                    ✖ Out of stock
+                </button>
+            </div>
+
+            <AnimatePresence mode="wait">
+                {decision === "refused" && (
+                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="action-sub-panel refuse-panel">
+                        <textarea
+                            placeholder="Why? (e.g. Stock finished)"
+                            value={reason}
+                            onChange={(e) => setReason(e.target.value)}
+                        />
+                        <button className="btn-send-refusal" onClick={() => alert("Refusal sent")}>Send Refusal</button>
+                    </motion.div>
+                )}
+
+                {decision === "accepted" && (
+                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="action-sub-panel accept-panel">
+                        <div className="price-reveal-group">
+                            <input
+                                type="number"
+                                placeholder="Price (DH)"
+                                value={price}
+                                onChange={(e) => setPrice(e.target.value)}
+                            />
+                            <button className="btn-final-submit" onClick={() => alert(`Quote: ${price} DH sent`)}>
+                                Submit Quote
+                            </button>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </motion.div>
+    );
+};
 export default function Fournisseur() {
     const [activeSection, setActiveSection] = useState<string>("dashboard");
     const [profile, setProfile] = useState<Profile | null>(null);
@@ -39,7 +101,7 @@ export default function Fournisseur() {
                 const token = localStorage.getItem("token");
 
                 const res = await axios.get<FournisseurResponse>(
-                    "http://localhost:8888/fournisseur-service/api/fournisseurs/me",
+                    "http://localhost:8888/service-fournisseur/api/fournisseurs/me",
                     {
                         headers: { Authorization: `Bearer ${token}` }
                     }
@@ -67,7 +129,7 @@ export default function Fournisseur() {
 
         try {
             const res = await axios.put(
-                "http://localhost:8888/fournisseur-service/api/fournisseurs/me",
+                "http://localhost:8888/service-fournisseur/api/fournisseurs/me",
                 formData,
                 {
                     headers: {
@@ -77,11 +139,8 @@ export default function Fournisseur() {
                 }
             );
 
-            // Update profile with full URL
             const updatedProfile = res.data.fournisseur;
-            if (updatedProfile.image && !updatedProfile.image.startsWith("http")) {
-                updatedProfile.image = `http://localhost:8888/fournisseur-service${updatedProfile.image}`;
-            }
+            setProfile(res.data.fournisseur);
             setProfile(updatedProfile);
 
         } catch (err) {
@@ -89,27 +148,118 @@ export default function Fournisseur() {
         }
     };
 
-    if (!profile) return <p>Loading profile...</p>;
+    const [categories, setCategories] = useState<any[]>([]);
+    const [selectedCats, setSelectedCats] = useState<number[]>([]);
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const token = localStorage.getItem("token");
+                const res = await axios.get("http://localhost:8888/produit-stock-service/v1/categories", {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                setCategories(res.data);
+            } catch (err) {
+                console.error("Error fetching categories", err);
+            }
+        };
+        fetchCategories();
+    }, []);
 
+    const toggleCategory = (id: number) => {
+        setSelectedCats(prev =>
+            prev.includes(id) ? prev.filter(catId => catId !== id) : [...prev, id]
+        );
+    };
+
+    const saveSpecialization = async () => {
+        try {
+            const token = localStorage.getItem("token");
+
+            const res = await axios.post(
+                "http://localhost:8888/service-fournisseur/api/fournisseurs/specializations",
+                { categoryIds: selectedCats },
+                {
+                    headers: { Authorization: `Bearer ${token}` }
+                }
+            );
+
+            if (res.status === 200) {
+                alert("Your specializations have been successfully registered ✅");
+            }
+        } catch (err: any) {
+            console.error("Error saving specializations", err.response?.data || err.message);
+            alert("Error saving specializations.");
+        }
+    };
+
+    const [allNotifications, setAllNotifications] = useState<any[]>([]);
+    const [selectedOrder, setSelectedOrder] = useState<any>(null);
+
+    const fetchNotifications = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            const res = await axios.get("http://localhost:8888/service-notification/api/notifications", {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            const data = res.data.notifications || res.data;
+
+            console.log("RAW DATA FROM API:", res.data);
+            setAllNotifications(Array.isArray(data) ? data : []);
+
+        } catch (err) {
+            console.error("Error fetching notifications", err);
+            setAllNotifications([]);
+        }
+    };
+
+    useEffect(() => {
+        if (activeSection === "bell") {
+            fetchNotifications();
+        }
+    }, [activeSection]);
+
+    const orderRequests = allNotifications.filter(n => n.niveau === "RFQ");
+
+    const handleMarkAsRead = async (id: string) => {
+        try {
+            const token = localStorage.getItem("token");
+            await axios.patch(`http://localhost:8888/service-notification/api/notifications/${id}/read`, {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            fetchNotifications(); // Refresh
+        } catch (err) {
+            console.error("Error marking as read", err);
+        }
+    };
+    if (!profile) return <p>Loading profile...</p>;
     return (
         <div className="manager-container">
 
             {/* Sidebar */}
             <aside className="sidebar">
                 <ul className="menu">
-                    <li className={activeSection === "dashboard" ? "active" : ""} onClick={() => setActiveSection("dashboard")}>
+                    <li className={activeSection === "dashboard" ? "active" : ""}
+                        onClick={() => setActiveSection("dashboard")}>
                         <FiGrid/>
                     </li>
-                    <li className={activeSection === "products" ? "active" : ""} onClick={() => setActiveSection("products")}>
-                        <FaBoxes/>
+                    <li className={activeSection === "orders" ? "active" : ""}
+                        onClick={() => setActiveSection("orders")}>
+                        <FaTasks/>
                     </li>
-                    <li className={activeSection === "analytics" ? "active" : ""} onClick={() => setActiveSection("analytics")}>
+                    <li className={activeSection === "analytics" ? "active" : ""}
+                        onClick={() => setActiveSection("analytics")}>
                         <FaChartBar/>
+                    </li>
+                    <li className={activeSection === "specialization" ? "active" : ""}
+                        onClick={() => setActiveSection("specialization")}>
+                        <FaTags/>
                     </li>
                 </ul>
 
                 <ul className="bottom-menu">
-                    <li className={activeSection === "settings" ? "active" : ""} onClick={() => setActiveSection("settings")}>
+                    <li className={activeSection === "settings" ? "active" : ""}
+                        onClick={() => setActiveSection("settings")}>
                         <FaCog/>
                     </li>
                     <li onClick={() => { localStorage.removeItem("token"); window.location.href = "/login"; }}>
@@ -140,11 +290,14 @@ export default function Fournisseur() {
 
                         <div className="nav-avatar" onClick={() => setActiveSection("profile")}
                              style={{cursor: "pointer"}}>
-                            {profile?.image ? <img
-                                src={profile.image.startsWith('http') ? profile.image : `http://localhost:8888/fournisseur-service${profile.image}`}
-                                alt="Profile"
-                                className="nav-avatar-img"
-                            /> : <FaUser size={24}/>}
+                            {profile?.image ?
+                                <img
+                                    src={profile.image.startsWith('http')
+                                        ? profile.image
+                                        : `http://localhost:8888/service-fournisseur${profile.image}`}
+                                    alt="Profile"
+                                    className="nav-avatar-img"
+                                /> : <FaUser size={24}/>}
                         </div>
 
                         <p>{profile?.prenom || ""}</p>
@@ -159,34 +312,136 @@ export default function Fournisseur() {
                     </div>
                 )}
 
-                {/* Products */}
-                {activeSection === "products" && (
-                    <div className="panel large">
-                        <h3>Products List</h3>
-                        <table className="stock-table">
-                            <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Category</th>
-                                <th>Stock</th>
-                                <th>Status</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            <tr>
-                                <td>Laptop Dell</td>
-                                <td>Electronics</td>
-                                <td>45</td>
-                                <td>Available</td>
-                            </tr>
-                            <tr>
-                                <td>Keyboard</td>
-                                <td>Accessories</td>
-                                <td>12</td>
-                                <td>Low</td>
-                            </tr>
-                            </tbody>
-                        </table>
+                {activeSection === "bell" && (
+                    <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="notifications-hub"
+                    >
+                        <div className="hub-header">
+                            <div className="header-text-group">
+                                <h2 className="section-title">Notification Center</h2>
+                                <p className="section-subtitle">Manage your inventory alerts, orders, and system communications.</p>
+                            </div>
+                        </div>
+
+                        <div className="notif-sections-container">
+
+                            {/* --- COLUMN 1: NEW ORDER REQUESTS (الجديد) --- */}
+                            <section className="notif-group glass-panel">
+                                <div className="group-header">
+                                    <FaTags className="icon-order" style={{ color: '#6c5ce7' }} />
+                                    <h3>New Order Requests</h3>
+                                    <span className="badge-count" style={{ background: '#6c5ce7' }}>
+                        {orderRequests.length}
+                    </span>
+                                </div>
+                                <div className="notif-list">
+                                    {orderRequests.length > 0 ? (
+                                        orderRequests.map(notif => (
+                                            <div key={notif._id} className="notif-item order-request">
+                                                <div className="notif-content">
+                                                    <p>{notif.message}</p>
+                                                    <span
+                                                        className="notif-time">{new Date(notif.dateAlerte).toLocaleString()}</span>
+                                                </div>
+                                                <button
+                                                    className="btn-action-quote"
+                                                    onClick={() => {
+                                                        setActiveSection("orders");
+                                                    }}
+                                                >
+                                                    Set Price <span className="arrow-icon">→</span>
+                                                </button>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="empty-msg"><p>No pending orders.</p></div>
+                                    )}
+                                </div>
+                            </section>
+
+                            {/* --- COLUMN 2: CRITICAL STOCK ALERTS --- */}
+                            <section className="notif-group glass-panel">
+                                <div className="group-header">
+                                    <FaBoxes className="icon-stock" style={{ color: '#ef4444' }} />
+                                    <h3>Stock Alerts</h3>
+                                    <span className="badge-count" style={{ background: '#ef4444' }}>
+                                    </span>
+                                </div>
+                            </section>
+
+                            {/* --- COLUMN 3: SYSTEM MESSAGES --- */}
+                            <section className="notif-group glass-panel">
+                                <div className="group-header">
+                                    <FaBell className="icon-msg" style={{ color: '#4facfe' }} />
+                                    <h3>System Messages</h3>
+                                    <span className="badge-count" style={{ background: '#4facfe' }}>
+                                    </span>
+                                </div>
+                            </section>
+
+                        </div>
+                    </motion.div>
+                )}
+                {activeSection === "specialization" && (
+                    <div className="specialization-panel fade-in">
+                        <header className="spec-header">
+                            <h2>My Specializations</h2>
+                            <p>Choose the product categories you can supply.</p>
+                        </header>
+
+                        <div className="categories-grid">
+                            {categories.map((cat) => (
+                                <div
+                                    key={cat.id}
+                                    className={`category-card ${selectedCats.includes(cat.id) ? 'selected' : ''}`}
+                                    onClick={() => toggleCategory(cat.id)}
+                                >
+                                    <div className="card-check">
+                                        {selectedCats.includes(cat.id) ? '✓' : '+'}
+                                    </div>
+                                    <div className="card-content">
+                                        <h4>{cat.nom}</h4>
+                                        <p>{cat.description || "Supplier of products in this category"}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="action-bar">
+                            <button className="btn-save-spec" onClick={saveSpecialization}>
+                                Save my choices
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* Orders */}
+                {activeSection === "orders" && (
+                    <div className="orders-workspace">
+                        <header className="workspace-header">
+                            <div className="header-with-badge">
+                                <h2>Order Decision Center</h2>
+
+                                <span className="total-orders-badge">
+                    {orderRequests.length} Pending Requests
+                </span>
+                            </div>
+                            <p>Validate availability and submit pricing for each request below.</p>
+                        </header>
+
+                        <div className="orders-container">
+                            {orderRequests.length > 0 ? (
+                                orderRequests.map((order) => (
+                                    <OrderItemCard key={order._id} order={order} />
+                                ))
+                            ) : (
+                                <div className="empty-msg">
+                                    <p>No pending orders to show at the moment.</p>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 )}
 
@@ -222,7 +477,9 @@ export default function Fournisseur() {
 
                                 {profile.image ? (
                                     <img
-                                        src={profile.image.startsWith('http') ? profile.image : `http://localhost:8888/fournisseur-service${profile.image}`}
+                                        src={profile.image.startsWith('http')
+                                            ? profile.image
+                                            : `http://localhost:8888/service-fournisseur${profile.image}`}
                                         alt="Profile"
                                         className="profile-avatar-img"
                                     />

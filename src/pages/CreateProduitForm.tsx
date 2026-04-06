@@ -27,7 +27,7 @@ const CreateProductForm: React.FC = () => {
         const fetchCats = async () => {
             try {
                 const token = localStorage.getItem("token");
-                const res = await axios.get("http://localhost:8888/produit-stock/v1/categories", {
+                const res = await axios.get("http://localhost:8888/produit-stock-service/v1/categories", {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setCategories(res.data);
@@ -63,7 +63,7 @@ const CreateProductForm: React.FC = () => {
         try {
             const token = localStorage.getItem("token");
 
-            const response = await axios.post("http://localhost:8888/produit-stock/v1/produits/create",
+            const response = await axios.post("http://localhost:8888/produit-stock-service/v1/produits/create",
                 {
                     ...formData,
                     image: preview

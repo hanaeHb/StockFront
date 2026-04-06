@@ -452,7 +452,7 @@ td:last-child {
     text-align: right;
     padding-right: 25px;
 }
-/* --- أزرار العمليات (In/Out) في الجدول --- */
+
 .btn-action-in, .btn-action-out {
     width: 32px;
     height: 32px;
@@ -468,13 +468,12 @@ td:last-child {
     color: white;
 }
 
-/* زر الدخول (اللون الأخضر المريح للعين) */
 .btn-action-in {
     background: linear-gradient(135deg, #10b981 0%, #059669 100%);
     box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);
 }
 
-/* زر الخروج (اللون الأحمر الهادئ) */
+
 .btn-action-out {
     background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
     box-shadow: 0 4px 10px rgba(244, 63, 94, 0.2);
@@ -486,15 +485,14 @@ td:last-child {
     filter: brightness(1.1);
 }
 
-/* --- تصميم المودال (Modern Glassmorphism) --- */
 .modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(15, 23, 42, 0.4); /* لون ليلي خفيف */
-    backdrop-filter: blur(8px); /* تأثير الضباب على الخلفية */
+    background: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(8px);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -534,7 +532,6 @@ td:last-child {
     border-radius: 6px;
 }
 
-/* Input Styles داخل المودال */
 .movement-modal .form-group label {
     display: block;
     font-weight: 700;
@@ -563,7 +560,6 @@ td:last-child {
     box-shadow: 0 0 0 4px rgba(79, 172, 254, 0.1);
 }
 
-/* --- أزرار المودال --- */
 .modal-actions {
     display: grid;
     grid-template-columns: 1fr 1.5fr;
@@ -607,17 +603,34 @@ td:last-child {
 .notifications-hub {
     padding: 20px;
 }
-
+.hub-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 30px;
+}
 .notif-sections-container {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 25px;
-    margin-top: 20px;
+    margin-top: 30px;
+}
+.header-text-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+
+
+.section-subtitle {
+    margin: 0;
+    color: #64748b;
+    font-size: 14px;
 }
 
 .notif-group {
     padding: 20px;
-    height: 500px;
     overflow-y: auto;
 }
 
@@ -639,15 +652,28 @@ td:last-child {
     margin-left: auto;
 }
 
+.notifications-hub {
+    animation: fadeIn 0.5s ease-out;
+}
+
 .notif-item {
     display: flex;
-    align-items: flex-start;
-    gap: 15px;
-    padding: 15px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 10px;
-    margin-bottom: 12px;
-    transition: 0.3s;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 16px;
+    margin-bottom: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+}
+
+.notif-item:hover {
+    transform: translateY(-3px);
+    background: white;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+    border-color: rgba(79, 172, 254, 0.2);
 }
 
 .notif-item.critical {
@@ -706,4 +732,87 @@ td:last-child {
     text-align: center;
     padding: 40px 20px;
     color: #aaaaaa;
+}
+
+
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(10px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+}
+
+.movement-modal {
+    width: 430px;
+    padding: 25px;
+    background: rgba(255, 255, 255, 0.95) !important;
+    border-radius: 20px;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+    border-top: 4px solid #ffb347;
+}
+
+.modern {
+    width: 100%;
+    padding: 12px;
+    background: #fdfaf7;
+    font-size: 18px;
+    font-weight: 700;
+    margin-top: 10px;
+    outline: none;
+    border: 2px solid #eee;
+    border-radius: 12px;
+    transition: 0.3s;
+    text-align: center;
+    color: #000;
+}
+
+.moderne:focus {
+    border-color: #ffb347;
+    background: white;
+    box-shadow: 0 0 0 4px rgba(255, 179, 71, 0.15);
+}
+
+.modal-actions-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 15px;
+    margin-top: 25px;
+}
+
+
+.btn-confirm-restock {
+    background: linear-gradient(135deg, #ffb347 0%, #ff914d 100%);
+    color: #000;
+    border: none;
+    padding: 12px;
+    border-radius: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 8px 15px rgba(255, 179, 71, 0.25);
+    transition: 0.3s;
+}
+
+.btn-confirm-restock:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 20px rgba(255, 179, 71, 0.35);
+    filter: brightness(1.05);
+}
+
+.btn-cancel-modern {
+    background: #f1f5f9;
+    color: #64748b;
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-cancel-modern:hover {
+    background: #e2e8f0;
 }

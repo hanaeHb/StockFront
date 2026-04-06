@@ -26,7 +26,7 @@ export default function Manager() {
                 const token = localStorage.getItem("token");
 
                 const res = await axios.get(
-                    "http://localhost:8888/users-service/v1/user-profiles/me",
+                    "http://localhost:8888/usersservice/v1/user-profiles/me",
                     {
                         headers: {
                             Authorization: `Bearer ${token}`
@@ -262,7 +262,7 @@ export default function Manager() {
                                                 try {
                                                     const token = localStorage.getItem("token");
                                                     await axios.put(
-                                                        `http://localhost:8888/users-service/v1/user-profiles/me`,
+                                                        `http://localhost:8888/usersservice/v1/user-profiles/me`,
                                                         {image: imageBase64},
                                                         {
                                                             headers: {
@@ -343,7 +343,7 @@ export default function Manager() {
                                         };
 
                                         const res = await axios.put(
-                                            `http://localhost:8888/users-service/v1/user-profiles/me`,
+                                            `http://localhost:8888/usersservice/v1/user-profiles/me`,
                                             updatedData,
                                             {
                                                 headers: {Authorization: `Bearer ${token}`},

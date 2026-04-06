@@ -15,20 +15,21 @@ import {
     FaEdit,
     FaPhone,
     FaBoxes,
-    FaTruckLoading
+    FaTruckLoading,
 } from "react-icons/fa";
 import { BiCategory } from "react-icons/bi";
 import { TbCategory } from "react-icons/tb";
 import { HiViewGridAdd } from "react-icons/hi";
 import { FaTruck } from "react-icons/fa";
 import "./CreateProduitForm";
-import { FiGrid, FiCreditCard } from "react-icons/fi";
+import { FiDollarSign, FiCalendar, FiCheckCircle, FiTrendingUp } from 'react-icons/fi';
+import { FiGrid, FiCreditCard} from "react-icons/fi";
 import UsersRoleChart from "./UsersRoleChart";
 import UsersStatusChart from "./UsersStatusChart";
 import axios from "axios";
 import CreateProduitForm from "./CreateProduitForm";
 import {motion} from "framer-motion";
-
+import BudgetManagement from "./BudgetManagement";
 
 
 export default function Admin() {
@@ -97,7 +98,7 @@ export default function Admin() {
             try {
                 const token = localStorage.getItem("token");
                 const res = await axios.get(
-                    "http://localhost:8888/users-service/v1/user-profiles/me",
+                    "http://localhost:8888/usersservice/v1/user-profiles/me",
                     {
                         headers: { Authorization: `Bearer ${token}` }
                     }
@@ -120,7 +121,7 @@ export default function Admin() {
             phone: adminData.phone,
             cin: adminData.cin,
         };
-        fetch(`http://localhost:8888/users-service/v1/user-profiles/me`, {
+        fetch(`http://localhost:8888/usersservice/v1/user-profiles/me`, {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
@@ -293,7 +294,7 @@ export default function Admin() {
     const fetchPendingFournisseurs = async () => {
         try {
             const res = await fetch(
-                "http://localhost:8888/notification-service/api/notifications/pending",
+                "http://localhost:8888/service-notification/api/notifications/pending",
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             if (!res.ok) throw new Error("Erreur fetch pending");
@@ -308,7 +309,7 @@ export default function Admin() {
     const fetchValidatedFournisseurs = async () => {
         try {
             const res = await fetch(
-                "http://localhost:8888/notification-service/api/notifications/validated",
+                "http://localhost:8888/service-notification/api/notifications/validated",
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             if (!res.ok) throw new Error("Erreur fetch validated");
@@ -381,7 +382,7 @@ export default function Admin() {
     const fetchCategories = async () => {
         try {
             const token = localStorage.getItem("token");
-            const res = await axios.get("http://localhost:8888/produit-stock/v1/categories", {
+            const res = await axios.get("http://localhost:8888/produit-stock-service/v1/categories", {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setCategories(res.data);
@@ -395,7 +396,7 @@ export default function Admin() {
         e.preventDefault();
         try {
             const token = localStorage.getItem("token");
-            await axios.post("http://localhost:8888/produit-stock/v1/categories", categoryData, {
+            await axios.post("http://localhost:8888/produit-stock-service/v1/categories", categoryData, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             alert("Category created! ✅");
@@ -420,7 +421,7 @@ export default function Admin() {
     const updateCategory = async (e) => {
         e.preventDefault();
         try {
-            await axios.put(`http://localhost:8888/produit-stock/v1/categories/${currentCategoryId}`, categoryData, {
+            await axios.put(`http://localhost:8888/produit-stock-service/v1/categories/${currentCategoryId}`, categoryData, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             alert("Catégorie mise à jour ! ✅");
@@ -440,7 +441,7 @@ export default function Admin() {
     const deleteCategory = async (id) => {
         if (!window.confirm("Voulez-vous supprimer cette catégorie ?")) return;
         try {
-            await axios.delete(`http://localhost:8888/produit-stock/v1/categories/${id}`, {
+            await axios.delete(`http://localhost:8888/produit-stock-service/v1/categories/${id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             fetchCategories();
@@ -461,7 +462,7 @@ export default function Admin() {
     const fetchProducts = async () => {
         try {
             const token = localStorage.getItem("token");
-            const res = await axios.get("http://localhost:8888/produit-stock/v1/produits", {
+            const res = await axios.get("http://localhost:8888/produit-stock-service/v1/produits", {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setProducts(res.data);
@@ -512,12 +513,16 @@ export default function Admin() {
                         onClick={() => setActiveSection("categorys")}>
                         <HiViewGridAdd/>
                     </li>
+                    <li className={activeSection === "budget" ? "active" : ""}
+                        onClick={() => setActiveSection("budget")}>
+                        <FiTrendingUp/>
+                    </li>
                 </ul>
 
                 <ul className="bottom-menu">
                     <li className={activeSection === "settings" ? "active" : ""}
                         onClick={() => setActiveSection("settings")}>
-                        <FaCog/>
+                    <FaCog/>
                     </li>
                     <li onClick={() => {
                         localStorage.removeItem("token");
@@ -561,6 +566,8 @@ export default function Admin() {
                         <p>{adminData?.prenom}</p>
                     </div>
                 </div>
+
+                {activeSection === "budget" && <BudgetManagement />}
 
                 {/* ===================== Dashboard ===================== */}
                 {activeSection === "dashboard" && (

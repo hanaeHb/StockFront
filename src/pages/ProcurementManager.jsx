@@ -7,10 +7,12 @@ import {
     FaCog,
     FaUser,
     FaSignOutAlt,
-    FaBoxes, FaUserTie
+    FaBoxes, FaUserTie, FaInbox
 } from "react-icons/fa";
-import { FiGrid } from "react-icons/fi";
+import {FiGrid, FiTrendingUp} from "react-icons/fi";
 import axios from "axios";
+import PurchaseBudgetTracker from "./PurchaseBudgetTracker";
+import OrderWizard from "./OrderWizard";
 
 export default function ProcurementManager() {
 
@@ -26,7 +28,7 @@ export default function ProcurementManager() {
                 const token = localStorage.getItem("token");
 
                 const res = await axios.get(
-                    "http://localhost:8888/users-service/v1/user-profiles/me",
+                    "http://localhost:8888/usersservice/v1/user-profiles/me",
                     {
                         headers: {
                             Authorization: `Bearer ${token}`
@@ -55,7 +57,7 @@ export default function ProcurementManager() {
             const token = localStorage.getItem("token");
 
             await axios.put(
-                `http://localhost:8888/notification-service/api/notifications/${notificationId}/status`,
+                `http://localhost:8888/service-notification/api/notifications/${notificationId}/status`,
                 { status },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
@@ -89,7 +91,7 @@ export default function ProcurementManager() {
         const fetchPending = async () => {
             try {
                 const token = localStorage.getItem("token");
-                const res = await axios.get("http://localhost:8888/notification-service/api/notifications/pending", {
+                const res = await axios.get("http://localhost:8888/service-notification/api/notifications/pending", {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setPendingFournisseurs(res.data);
@@ -102,7 +104,7 @@ export default function ProcurementManager() {
         const fetchValidated = async () => {
             try {
                 const token = localStorage.getItem("token");
-                const res = await fetch("http://localhost:8888/notification-service/api/notifications/validated", {
+                const res = await fetch("http://localhost:8888/service-notification/api/notifications/validated", {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 if (!res.ok) throw new Error("Erreur fetch validated");
@@ -119,7 +121,28 @@ export default function ProcurementManager() {
         fetchValidated();
     }, []);
 
+    useEffect(() => {
+        const fetchAllNotifications = async () => {
+            try {
+                const token = localStorage.getItem("token");
+                const config = { headers: { Authorization: `Bearer ${token}` } };
 
+                const resPending = await axios.get("http://localhost:8888/service-notification/api/notifications/pending", config);
+
+                const resRestock = await axios.get("http://localhost:8888/service-notification/api/notifications/replenishment-requests", config);
+
+                setNotificationCount(resPending.data.length + resRestock.data.length);
+
+                setPendingFournisseurs(resPending.data);
+                setReplenishmentRequests(resRestock.data);
+
+            } catch (err) {
+                console.error("Error fetching all notifications:", err);
+            }
+        };
+
+        fetchAllNotifications();
+    }, [activeSection]);
     const downloadCV = async (cvFile) => {
         try {
             if (!cvFile) {
@@ -150,6 +173,27 @@ export default function ProcurementManager() {
             alert("Failed to download CV. Make sure you are logged in.");
         }
     };
+    const [replenishmentRequests, setReplenishmentRequests] = useState([]);
+    useEffect(() => {
+        const fetchRequests = async () => {
+            try {
+                const token = localStorage.getItem("token");
+                const res = await axios.get("http://localhost:8888/service-notification/api/notifications/replenishment-requests", {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                setReplenishmentRequests(res.data);
+            } catch (err) {
+                console.error("Error fetching replenishment requests:", err);
+            }
+        };
+
+        if (activeSection === "restock_orders" || activeSection === "dashboard") {
+            fetchRequests();
+        }
+    }, [activeSection]);
+
+    const [isWizardOpen, setIsWizardOpen] = useState(false);
+    const [currentRequest, setCurrentRequest] = useState(null);
     return (
         <div className="manager-container">
 
@@ -176,7 +220,14 @@ export default function ProcurementManager() {
                         onClick={() => setActiveSection("analytics")}>
                         <FaChartBar/>
                     </li>
-
+                    <li className={activeSection === "restock_orders" ? "active" : ""}
+                        onClick={() => setActiveSection("restock_orders")}>
+                        <FaInbox/>
+                    </li>
+                    <li className={activeSection === "budget" ? "active" : ""}
+                        onClick={() => setActiveSection("budget")}>
+                        <FiTrendingUp/>
+                    </li>
                 </ul>
 
                 <ul className="bottom-menu">
@@ -236,6 +287,81 @@ export default function ProcurementManager() {
 
                 </div>
 
+                {activeSection === "budget" && <PurchaseBudgetTracker />}
+                {activeSection === "bell" && (
+                    <div className="notifications-hub fade-in">
+                        <div className="hub-header">
+                            <div>
+                                <h2 className="section-title">Notification Center</h2>
+                                <p className="section-subtitle">Manage your inventory alerts and supplier requests.</p>
+                            </div>
+                        </div>
+
+                        <div className="notif-sections-container">
+
+                            <section className="notif-group glass-panel">
+                                <div className="group-header">
+                                    <FaInbox className="icon-stock" style={{ color: '#FFB347' }} />
+                                    <h3>Replenishment Requests</h3>
+                                    <span className="badge-count" style={{ background: '#FFB347' }}>
+                        {replenishmentRequests.length}
+                    </span>
+                                </div>
+
+                                <div className="notif-list">
+                                    {replenishmentRequests.length > 0 ? (
+                                        replenishmentRequests.map(req => (
+                                            <div key={req._id} className="notif-item critical" onClick={() => setActiveSection("restock_orders")}>
+                                                <div className="notif-content">
+                                                    <p><strong>{req.productName}</strong>: New restock request for {req.requestedQty} units.</p>
+                                                    <span className="notif-time">
+                                        From: {req.fromManager} • {new Date(req.dateAlerte).toLocaleString()}
+                                    </span>
+                                                </div>
+                                                <div className="notif-action-icon">→</div>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="empty-msg">
+                                            <p>✅ No pending restock requests.</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </section>
+
+                            <section className="notif-group glass-panel">
+                                <div className="group-header">
+                                    <FaUserTie className="icon-msg" style={{ color: '#4facfe' }} />
+                                    <h3>Supplier Registrations</h3>
+                                    <span className="badge-count" style={{ background: '#4facfe' }}>
+                        {pendingFournisseurs.length}
+                    </span>
+                                </div>
+                                <div className="notif-list">
+                                    {pendingFournisseurs.length > 0 ? (
+                                        pendingFournisseurs.map(f => (
+                                            <div key={f._id} className="notif-item info" onClick={() => setActiveSection("fournisseurs")}>
+                                                <div className="notif-content">
+                                                    <p><strong>{f.firstName} {f.lastName}</strong> applied as a new supplier.</p>
+                                                    <span className="notif-time">
+                                        Status: Pending Verification • {new Date(f.dateAlerte).toLocaleDateString()}
+                                    </span>
+                                                </div>
+                                                <div className="notif-action-icon">→</div>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="empty-msg">
+                                            <p>No new supplier applications.</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </section>
+
+                        </div>
+                    </div>
+                )}
+
                 {/* Dashboard */}
                 {activeSection === "dashboard" && (
                     <>
@@ -264,6 +390,13 @@ export default function ProcurementManager() {
                                 <div className="card-icon"><FaFolder/></div>
                                 <h3>36</h3>
                                 <p>Categories</p>
+                            </div>
+
+                            <div className="card" onClick={() => setActiveSection("restock_orders")}
+                                 style={{cursor: 'pointer'}}>
+                                <div className="card-icon"><FaInbox /></div>
+                                <h3>{replenishmentRequests.length}</h3>
+                                <p>New Restock Requests</p>
                             </div>
 
                         </section>
@@ -308,6 +441,99 @@ export default function ProcurementManager() {
                     </div>
                 )}
 
+                {activeSection === "restock_orders" && (
+                    <div className="panel large restock-panel">
+                        <header className="panel-header-custom">
+                            <div className="header-info">
+                                <div>
+                                    <h2>Critical Replenishment Requests</h2>
+                                    <p>High-priority restock orders from Inventory Managers</p>
+                                </div>
+                            </div>
+                            <div className="header-stats">
+                                <span className="request-count">{replenishmentRequests.length} Pending</span>
+                            </div>
+                        </header>
+
+                        <div className="table-container-custom">
+                            <table className="modern-table">
+                                <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Category</th>
+                                    <th>Requested Qty</th>
+                                    <th>Requested By</th>
+                                    <th>Date</th>
+                                    <th style={{textAlign: 'center'}}>Action</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {replenishmentRequests.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={5} className="empty-row">
+                                            <FaInbox size={30} />
+                                            <p>No pending requests at the moment</p>
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    replenishmentRequests.map((req) => (
+                                        <tr key={req._id} className="row-hover">
+                                            <td>
+                                                <div className="product-cell">
+                                                    <span className="p-dot"></span>
+                                                    <strong>{req.productName}</strong>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div className="category-cell">
+                                                    <span className="c-tag">
+                                                        {req.category || "General"}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span className="qty-pill">{req.requestedQty} units</span>
+                                            </td>
+                                            <td>
+                                                <div className="manager-cell">
+                                                    <FaUserTie size={12}/>
+                                                    <span>{req.fromManager}</span>
+                                                </div>
+                                            </td>
+                                            <td className="date-cell">
+                                                {new Date(req.dateAlerte || Date.now()).toLocaleDateString()}
+                                            </td>
+                                            <td style={{textAlign: 'center'}}>
+                                                <button
+                                                    className="btn-approve-modern"
+                                                    onClick={() => {
+                                                        console.log("Request selected:", req);
+                                                        setCurrentRequest(req);
+                                                        setIsWizardOpen(true);
+                                                    }}
+                                                >
+                                                    Approve & Order
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
+                {/* ... بقية الكود ديالك ... */}
+
+                <OrderWizard
+                    isOpen={isWizardOpen}
+                    onClose={() => setIsWizardOpen(false)}
+                    selectedRequest={currentRequest}
+                    onSuccess={(id) => {
+                        setReplenishmentRequests(prev => prev.filter(r => r._id !== id));
+                        alert("Commande traitée avec succès !");
+                    }}
+                />
                 {/* Analytics */}
                 {activeSection === "analytics" && (
                     <div className="panel large">
@@ -370,7 +596,7 @@ export default function ProcurementManager() {
                                                 try {
                                                     const token = localStorage.getItem("token");
                                                     await axios.put(
-                                                        `http://localhost:8888/users-service/v1/user-profiles/me`,
+                                                        `http://localhost:8888/usersservice/v1/user-profiles/me`,
                                                         {image: imageBase64},
                                                         {
                                                             headers: {
@@ -452,7 +678,7 @@ export default function ProcurementManager() {
                                         };
 
                                         const res = await axios.put(
-                                            `http://localhost:8888/users-service/v1/user-profiles/me`,
+                                            `http://localhost:8888/usersservice/v1/user-profiles/me`,
                                             updatedData,
                                             {
                                                 headers: {Authorization: `Bearer ${token}`},

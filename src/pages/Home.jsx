@@ -63,7 +63,7 @@ const Home = () => {
                 {/* AMENITIES SECTION */}
                 <section className="amenities">
                     <div className="amenities-header">
-                        <h2 className="section-subtitle">Discover Smart Features</h2>
+                        <h2 className="sec-sub">Discover Smart Features</h2>
                         <h1 className="section-main-title">Intelligent Tools</h1>
                         <div className="section-divider">
                             <div className="divider-line"></div>
@@ -125,7 +125,7 @@ const Home = () => {
                 {/* FEATURES */}
                 <section id="features" className="features">
                     <h2>Smart Inventory & Automated Restocking</h2>
-                    <p className="section-subtitle">
+                    <p className="section-sub">
                         Transform your inventory management with intelligent automation, predictive insights, and
                         seamless control across all your warehouses. Save time, reduce waste, and make smarter supply
                         chain decisions with Stockflow.

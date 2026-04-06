@@ -37,7 +37,7 @@ export default function InventoryManager() {
                 const token = localStorage.getItem("token");
 
                 const res = await axios.get<Profile>(
-                    "http://localhost:8888/users-service/v1/user-profiles/me",
+                    "http://localhost:8888/usersservice/v1/user-profiles/me",
                     {
                         headers: {
                             Authorization: `Bearer ${token}`
@@ -67,7 +67,7 @@ export default function InventoryManager() {
                 try {
                     const token = localStorage.getItem("token");
                     await axios.put(
-                        `http://localhost:8888/users-service/v1/user-profiles/me`,
+                        `http://localhost:8888/usersservice/v1/user-profiles/me`,
                         { image: imageBase64 },
                         {
                             headers: {
@@ -93,7 +93,7 @@ export default function InventoryManager() {
     const fetchProducts = async () => {
         try {
             const token = localStorage.getItem("token");
-            const res = await axios.get("http://localhost:8888/produit-stock/v1/produits", {
+            const res = await axios.get("http://localhost:8888/produit-stock-service/v1/produits", {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setProducts(res.data);
@@ -119,7 +119,7 @@ export default function InventoryManager() {
 
             };
 
-            await axios.post("http://localhost:8888/produit-stock/v1/mouvements", payload, {
+            await axios.post("http://localhost:8888/produit-stock-service/v1/mouvements", payload, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
@@ -137,7 +137,7 @@ export default function InventoryManager() {
     const fetchNotifications = async () => {
         try {
             const token = localStorage.getItem("token");
-            const res = await axios.get("http://localhost:8888/notification-service/api/notifications/stock-alerts", {
+            const res = await axios.get("http://localhost:8888/service-notification/api/notifications/stock-alerts", {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
@@ -154,7 +154,7 @@ export default function InventoryManager() {
         try {
             const token = localStorage.getItem("token");
             await axios.put(
-                `http://localhost:8888/notification-service/api/notifications/${id}/mark-as-read`,
+                `http://localhost:8888/service-notification/api/notifications/${id}/mark-as-read`,
                 {},
                 { headers: { Authorization: `Bearer ${token}` } }
             );
@@ -172,6 +172,37 @@ export default function InventoryManager() {
             fetchNotifications();
         }
     }, [activeSection]);
+
+    const [showRestockModal, setShowRestockModal] = useState(false);
+    const [targetProduct, setTargetProduct] = useState<any>(null);
+    const [requestedQty, setRequestedQty] = useState<number>(100);
+    const handleSendRequest = (product: any) => {
+        setTargetProduct(product);
+        setRequestedQty(100);
+        setShowRestockModal(true);
+    };
+
+    const confirmRestockAction = async () => {
+        if (!targetProduct || !requestedQty) return;
+
+        try {
+            const token = localStorage.getItem("token");
+            await axios.post("http://localhost:8888/produit-stock-service/v1/produits/request-restock", {
+                productId: targetProduct.id,
+                productName: targetProduct.nom,
+                requestedQty: requestedQty,
+                fromManager: profile?.prenom || "Inventory Dept"
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            setShowRestockModal(false);
+            alert("Request sent via Kafka! 🚀");
+        } catch (err) {
+            console.error(err);
+            alert("Error sending request to Kafka");
+        }
+    };
     return (
         <div className="manager-container">
 
@@ -277,6 +308,7 @@ export default function InventoryManager() {
                     </>
                 )}
 
+
                 {activeSection === "bell" && (
                     <motion.div
                         initial={{ opacity: 0, x: 20 }}
@@ -284,16 +316,18 @@ export default function InventoryManager() {
                         className="notifications-hub"
                     >
                         <div className="hub-header">
-                            <h2 className="section-title">Notification Center</h2>
-                            <p className="section-subtitle">Manage your inventory alerts and system communications.</p>
+                            <div className="header-text-group">
+                                <h2 className="section-title">Notification Center</h2>
+                                <p className="section-subtitle">Manage your inventory alerts and system
+                                    communications.</p>
+                            </div>
                         </div>
 
                         <div className="notif-sections-container">
 
-                            {/* --- COLUMN 1: STOCK ALERTS --- */}
                             <section className="notif-group glass-panel">
                                 <div className="group-header">
-                                    <FaBoxes className="icon-stock" style={{ color: '#ef4444' }} />
+                                <FaBoxes className="icon-stock" style={{ color: '#ef4444' }} />
                                     <h3>Critical Stock Alerts</h3>
                                     <span className="badge-count" style={{ background: '#ef4444' }}>
                         {notifications.length}
@@ -450,6 +484,25 @@ export default function InventoryManager() {
                                                             title="Sortie de stock"
                                                         > -
                                                         </button>
+                                                        {product.quantiteDisponible <= (product.seuilCritique || 5) && (
+                                                            <button
+                                                                className="btn-request-stock"
+                                                                onClick={() => handleSendRequest(product)}
+                                                                style={{
+                                                                    backgroundColor: '#ffb347',
+                                                                    color: '#000',
+                                                                    border: 'none',
+                                                                    borderRadius: '4px',
+                                                                    padding: '4px 8px',
+                                                                    fontSize: '11px',
+                                                                    fontWeight: 'bold',
+                                                                    cursor: 'pointer',
+                                                                    marginLeft: '5px'
+                                                                }}
+                                                            >
+                                                                Request Restock
+                                                            </button>
+                                                        )}
                                                     </div>
                                                 </td>
                                             <td>
@@ -463,6 +516,40 @@ export default function InventoryManager() {
                     </motion.div>
                 )}
 
+                {showRestockModal && (
+                    <div className="modal-overlay">
+                        <div className="movement-modal glass-panel fade-in">
+                            <div className="modal-header-styled">
+                                <h3>Restock Request</h3>
+                                <p>Specify the quantity for <strong>{targetProduct?.nom}</strong></p>
+                            </div>
+
+                            <div className="modal-body" style={{padding: '20px 0'}}>
+                                <div className="form-group">
+                                    <label style={{fontSize: '12px', fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase'}}>
+                                        Required Quantity
+                                    </label>
+                                    <input
+                                        type="number"
+                                        className="modern"
+                                        value={requestedQty}
+                                        onChange={(e) => setRequestedQty(Number(e.target.value))}
+                                        autoFocus
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="modal-actions-grid">
+                                <button className="btn-cancel-modern" onClick={() => setShowRestockModal(false)}>
+                                    Cancel
+                                </button>
+                                <button className="btn-confirm-restock" onClick={confirmRestockAction}>
+                                    Send to Procurement Manager
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
                 {activeSection === "create-product" && (
                     <motion.div
                         initial={{opacity: 0, scale: 0.9}}
@@ -629,7 +716,7 @@ export default function InventoryManager() {
                                         };
 
                                         const res = await axios.put(
-                                            `http://localhost:8888/users-service/v1/user-profiles/me`,
+                                            `http://localhost:8888/usersservice/v1/user-profiles/me`,
                                             updatedData,
                                             {
                                                 headers: {Authorization: `Bearer ${token}`},
